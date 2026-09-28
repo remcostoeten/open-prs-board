@@ -1,14 +1,27 @@
 # Open PRs board
 
-Static export of the "Alle open pull requests van Remco" artifact.
+A page that shows one author's open pull requests on Bitbucket, with the review threads, whose turn it is, the diff and a note for the reviewer per PR.
 
-- `index.html` is the whole board: styles, markup and the script that renders review threads, notes and diffs.
-- `diffs/<pr>.json` holds the per-file diff for each PR. The page fetches them with a relative URL, so serve the folder over HTTP:
+This is the static export of a Claude artifact. See [docs/scope.md](docs/scope.md) for what it does, what the artifact version could do, and what a shared team version still needs.
+
+## Run
+
+The page fetches `diffs/<pr>.json` with a relative URL, so serve the folder over HTTP:
 
 ```sh
-python3 -m http.server 8080
+npm start
 ```
 
-Then open http://localhost:8080. Opening `index.html` directly from disk leaves every row without a diff.
+Then open http://localhost:8080. Opening `index.html` from disk leaves every row without a diff. The `diffs/` folder is git-ignored; it holds the export from 2026-09-28.
 
-Data is a snapshot from 2026-09-28. Refresh it by regenerating the JSON files and the table rows; the page has no live Bitbucket connection.
+## Development
+
+```sh
+npm install
+npm run lint
+npm run format
+```
+
+Oxlint finds problems, oxfmt formats. Scripts live in `src/`, the markup, styles and snapshot data in `index.html`.
+
+xxx, Remco Stoeten <small>MIT</small>
