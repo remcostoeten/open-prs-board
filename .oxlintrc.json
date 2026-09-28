@@ -1,11 +1,26 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["unicorn", "oxc", "import", "promise"],
+    "jsPlugins": [
+        { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" },
+        { "name": "skriuw", "specifier": "./tools/oxlint/skriuw/index.ts" }
+    ],
     "categories": {
-        "correctness": "error",
-        "suspicious": "warn"
+        "correctness": "error"
     },
     "rules": {
-        "no-empty": "error"
+        "func-style": ["error", "declaration", { "allowTypeAnnotation": true }],
+        "prefer-arrow-callback": ["error", { "allowNamedFunctions": true }],
+        "no-empty": "error",
+        "no-var": "error",
+        "prefer-const": "error",
+        "eqeqeq": ["error", "smart"],
+        "import/no-duplicates": "error",
+        "anti-slop/no-module-mocking": "error",
+        "anti-slop/no-object-parameters": "error",
+        "anti-slop/no-reflect-apply": "error",
+        "anti-slop/no-reflect-get": "error",
+        "skriuw/no-silent-catch": "error"
     },
-    "ignorePatterns": ["diffs/", "node_modules/"]
+    "ignorePatterns": ["diffs/**", "**/node_modules/**", "tools/oxlint/anti-slop/**"]
 }

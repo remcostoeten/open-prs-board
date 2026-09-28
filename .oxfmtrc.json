@@ -4,5 +4,5 @@
     "printWidth": 120,
     "semi": false,
     "singleQuote": true,
-    "ignorePatterns": ["diffs/", "node_modules/"]
+    "ignorePatterns": ["diffs/**", "**/node_modules/**", "tools/oxlint/anti-slop/**"]
 }
