@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { Editable } from '@/features/board/components/editable'
-import { EFFORT, PIPELINE, PRIORITY } from '@/features/board/copy'
+import { EFFORT, PIPELINE, PRIORITY, PROVIDER_LABEL } from '@/features/board/copy'
 import { effortSchema, prioritySchema } from '@/features/board/schema'
 import type { Effort, NotePatch, Priority, PullRequest, ReviewData } from '@/features/board/types'
 
@@ -42,7 +42,7 @@ export function PriorityCell({ pr, priority, onSave }: Omit<SelectCellProps, 'ef
             <Editable fallback={priority && <span className={`pill p-${priority}`}>P{priority}</span>}>
                 <select
                     className={`effort-select prio-select ${priority ? `set p-${priority}` : ''}`}
-                    title="Prioriteit voor Daan: 1 pakt hij als eerste op"
+                    title="Prioriteit voor de reviewer: 1 eerst"
                     aria-label={`Prioriteit voor PR ${pr.number}`}
                     value={priority ?? ''}
                     disabled={busy}
@@ -70,7 +70,7 @@ export function EffortCell({ pr, effort, onSave }: Omit<SelectCellProps, 'priori
             <Editable fallback={effort && <span className={`pill e-${effort}`}>{EFFORT[effort]}</span>}>
                 <select
                     className={`effort-select ${effort ? `set e-${effort}` : ''}`}
-                    title="Hoeveel reviewtijd kost deze PR Daan ongeveer?"
+                    title="Hoeveel reviewtijd kost deze PR ongeveer?"
                     aria-label={`Reviewtijd voor PR ${pr.number}`}
                     value={effort ?? ''}
                     disabled={busy}
@@ -121,10 +121,10 @@ export function EnvironmentCell({ pr }: { pr: PullRequest }) {
 }
 
 export function ReviewCell({ pr, review, onShowThreads }: ReviewCellProps) {
-    const threads = review.threads[pr.number] ?? []
+    const threads = review.threads[pr.id] ?? []
     const answered = threads.filter((thread) => thread.replied).length
     const rereview = pr.review === 'changes_requested' && threads.length > 0 && answered === threads.length
-    const who = review.review[pr.number]?.who ?? 'Daan'
+    const who = review.review[pr.id]?.who ?? 'reviewer'
     return (
         <td className="rev">
             {pr.review === 'approved' && <span className="pill done-pill">✓ Approved</span>}
@@ -146,19 +146,19 @@ export function ReviewCell({ pr, review, onShowThreads }: ReviewCellProps) {
                     <button
                         type="button"
                         className="tshow"
-                        title="Toon de opmerkingen en mijn reacties"
+                        title="Toon de opmerkingen en de reacties"
                         onClick={onShowThreads}
                     >
                         {threads.length} {threads.length === 1 ? 'opmerking' : 'opmerkingen'},{' '}
                         <span
                             className={answered === threads.length ? 't-resolved' : answered ? 't-recheck' : 't-open'}
                         >
-                            {answered} door mij beantwoord
+                            {answered} beantwoord
                         </span>
                     </button>
                     ·
-                    <a href={pr.url} target="_blank" rel="noopener" title="Open de PR met alle comments in Bitbucket">
-                        Bitbucket ↗
+                    <a href={pr.url} target="_blank" rel="noopener" title="Open de PR bij de provider">
+                        {PROVIDER_LABEL[pr.provider] ?? 'Bron'} ↗
                     </a>
                 </span>
             )}

@@ -1,16 +1,22 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { saveNoteAction } from '@/features/board/actions'
 import type { Note, NoteID, NotePatch } from '@/features/board/types'
-
-const POLL_MS = 15_000
+import type { PublicError } from '@/shared/errors/result'
 
 export class NoteSaveError extends Error {
-    constructor(readonly code: string) {
-        super(code)
+    constructor(readonly error: PublicError) {
+        super(error.code)
     }
+}
+
+const SAVE_FAILED: PublicError = {
+    code: 'unknown',
+    message: 'Opslaan mislukt. Probeer het opnieuw.',
+    recovery: 'retry',
+    reference: null,
 }
 
 function byId(notes: Note[]) {
@@ -26,50 +32,25 @@ function applyPatch(current: Note | undefined, id: NoteID, patch: NotePatch): No
         text: patch.text === undefined ? (current?.text ?? null) : patch.text,
         priority: patch.priority === undefined ? (current?.priority ?? null) : patch.priority,
         effort: patch.effort === undefined ? (current?.effort ?? null) : patch.effort,
+        updatedBy: current?.updatedBy ?? null,
     }
 }
 
-async function fetchNotes() {
-    const response = await fetch('/api/notes', { cache: 'no-store' })
-    if (!response.ok) throw new Error(String(response.status))
-    const notes: Note[] = await response.json()
-    return notes
-}
-
 export function useNotes(initial: Note[]) {
+    const [source, setSource] = useState(initial)
     const [notes, setNotes] = useState(() => byId(initial))
-    const latest = useRef(notes)
-
-    useEffect(() => {
-        latest.current = notes
-    }, [notes])
-
-    useEffect(() => {
-        let stopped = false
-        function refresh() {
-            if (document.visibilityState !== 'visible') return
-            fetchNotes()
-                .then((fresh) => {
-                    if (!stopped) setNotes(byId(fresh))
-                })
-                .catch((error: Error) => console.warn('Notities verversen mislukt', error))
-        }
-        const timer = setInterval(refresh, POLL_MS)
-        document.addEventListener('visibilitychange', refresh)
-        return () => {
-            stopped = true
-            clearInterval(timer)
-            document.removeEventListener('visibilitychange', refresh)
-        }
-    }, [])
+    if (source !== initial) {
+        setSource(initial)
+        setNotes(byId(initial))
+    }
 
     async function save(id: NoteID, patch: NotePatch) {
-        const previous = latest.current.get(id)
+        const previous = notes.get(id)
         setNotes((current) => new Map(current).set(id, applyPatch(current.get(id), id, patch)))
-        const result = await saveNoteAction(id, patch).catch(() => ({ ok: false, error: 'failed' }) as const)
+        const result = await saveNoteAction(id, patch).catch(() => ({ ok: false, error: SAVE_FAILED }) as const)
         setNotes((current) => {
             const next = new Map(current)
-            const settled = result.ok ? result.note : previous
+            const settled = result.ok ? result.value : previous
             if (settled) next.set(id, settled)
             else next.delete(id)
             return next

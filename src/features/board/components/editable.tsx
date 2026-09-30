@@ -1,30 +1,22 @@
 'use client'
 
-import { createContext, type ReactNode, Suspense, use, useContext } from 'react'
+import { createContext, type ReactNode, useContext } from 'react'
 
-const CanWriteContext = createContext<Promise<boolean>>(Promise.resolve(false))
+const CanWriteContext = createContext(false)
 
-type GateProps = {
+type Props = {
     children: ReactNode
     fallback: ReactNode
 }
 
-export function CanWriteProvider({ value, children }: { value: Promise<boolean>; children: ReactNode }) {
+export function CanWriteProvider({ value, children }: { value: boolean; children: ReactNode }) {
     return <CanWriteContext value={value}>{children}</CanWriteContext>
 }
 
 export function useCanWrite() {
-    return use(useContext(CanWriteContext))
+    return useContext(CanWriteContext)
 }
 
-function Gate({ children, fallback }: GateProps) {
+export function Editable({ children, fallback }: Props) {
     return useCanWrite() ? children : fallback
-}
-
-export function Editable({ children, fallback }: GateProps) {
-    return (
-        <Suspense fallback={fallback}>
-            <Gate fallback={fallback}>{children}</Gate>
-        </Suspense>
-    )
 }

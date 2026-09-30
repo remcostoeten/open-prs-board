@@ -1,10 +1,15 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
+
+import { startThreadAction } from '@/features/board/actions'
+import { usePullRequest } from '@/features/board/components/board-context'
+import { CommentForm } from '@/features/board/components/comment-form'
+import { useCanWrite } from '@/features/board/components/editable'
 
 import { Code, DiffLine } from '@/features/board/components/diff-view'
 import { ThreadCard } from '@/features/board/components/thread-card'
-import { AUTHOR, THREAD_STATUS } from '@/features/board/copy'
+import { THREAD_STATUS } from '@/features/board/copy'
 import { parseDiff } from '@/features/board/diff'
 import type { DiffFile, ReviewData, ReviewThread, ThreadStatus } from '@/features/board/types'
 
@@ -20,6 +25,9 @@ type FileNodeProps = {
 const SEVERITY: ThreadStatus[] = ['open', 'recheck', 'resolved']
 
 function FileDiff({ file, threads, fixes }: Pick<FileNodeProps, 'file' | 'threads' | 'fixes'>) {
+    const pr = usePullRequest()
+    const canWrite = useCanWrite()
+    const [composing, setComposing] = useState<number | null>(null)
     function loose(items: ReviewThread[]) {
         return items.map((thread) => <ThreadCard key={thread.id} thread={thread} fix={fixes[thread.id]} />)
     }
@@ -28,6 +36,13 @@ function FileDiff({ file, threads, fixes }: Pick<FileNodeProps, 'file' | 'thread
             <>
                 {loose(threads)}
                 <div className="msg">Binair bestand, geen tekst-diff.</div>
+            </>
+        )
+    if (file.truncated)
+        return (
+            <>
+                {loose(threads)}
+                <div className="msg">Deze diff is te groot om hier te tonen. Open de PR bij de provider.</div>
             </>
         )
     if (!file.diff)
@@ -45,7 +60,23 @@ function FileDiff({ file, threads, fixes }: Pick<FileNodeProps, 'file' | 'thread
             <Code added={file.status === 'added'}>
                 {rows.map((row, index) => (
                     <Fragment key={index}>
-                        <DiffLine row={row} />
+                        <DiffLine row={row} onComment={canWrite ? setComposing : undefined} />
+                        {row.kind === 'line' && row.new !== null && composing === row.new && (
+                            <tr className="thread-row">
+                                <td colSpan={4}>
+                                    <CommentForm
+                                        label={`Opmerking bij ${file.path} regel ${row.new}`}
+                                        placeholder={`Opmerking bij regel ${row.new}`}
+                                        submitLabel="Opmerking plaatsen"
+                                        autoFocus
+                                        onSubmit={(body) =>
+                                            startThreadAction({ prId: pr.id, path: file.path, line: row.new, body })
+                                        }
+                                        onCancel={() => setComposing(null)}
+                                    />
+                                </td>
+                            </tr>
+                        )}
                         {row.kind === 'line' &&
                             row.new !== null &&
                             threads
@@ -60,9 +91,6 @@ function FileDiff({ file, threads, fixes }: Pick<FileNodeProps, 'file' | 'thread
                     </Fragment>
                 ))}
             </Code>
-            {file.truncated && (
-                <div className="msg">Diff afgekapt op 150 KB. Open de PR in Bitbucket voor de rest.</div>
-            )}
         </>
     )
 }
@@ -83,7 +111,7 @@ function Marks({ threads }: { threads: ReviewThread[] }) {
             </span>{' '}
             {answered > 0 && (
                 <>
-                    <span className="cmark replied" title={`${AUTHOR} heeft hierop geantwoord`}>
+                    <span className="cmark replied" title="Er is hierop geantwoord">
                         {answered === threads.length ? '✓ beantwoord' : `✓ ${answered} beantwoord`}
                     </span>{' '}
                 </>

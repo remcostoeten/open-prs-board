@@ -1,30 +1,21 @@
 'use client'
 
-import { useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
-import { NoteEditor } from '@/features/board/components/note-editor'
+import { markReadAction } from '@/features/board/actions'
+import { GroupHeader } from '@/features/board/components/group-header'
 import { PullRequestRow } from '@/features/board/components/pull-request-row'
 import { StackLinks } from '@/features/board/components/stack-links'
 import { useNotes } from '@/features/board/hooks/use-notes'
-import type {
-    Board,
-    Note,
-    PullRequest,
-    PullRequestGroup,
-    PullRequestNumber,
-    ReviewData,
-    SortMode,
-} from '@/features/board/types'
+import type { Board, PullRequest, PullRequestGroup, PullRequestID, SortMode } from '@/features/board/types'
 import { noop } from '@/shared/helpers/noop'
 
 type Props = {
     board: Board
-    review: ReviewData
-    initialNotes: Note[]
+    focus: PullRequestID | null
 }
 
 const SORT_KEY = 'open-prs-sort'
-const GROUP_SPAN = 14
 
 function readSortMode(): SortMode {
     try {
@@ -52,19 +43,25 @@ function writeSortMode(mode: SortMode) {
     sortListeners.forEach((listener) => listener())
 }
 
-export function BoardTable({ board, review, initialNotes }: Props) {
-    const { notes, save } = useNotes(initialNotes)
-    const [expanded, setExpanded] = useState<ReadonlySet<PullRequestNumber>>(() => new Set())
-    const [mounted, setMounted] = useState<ReadonlySet<PullRequestNumber>>(() => new Set())
+export function BoardTable({ board, focus }: Props) {
+    const { notes, save } = useNotes(board.notes)
+    const [expanded, setExpanded] = useState<ReadonlySet<PullRequestID>>(() => new Set(focus ? [focus] : []))
+    const [mounted, setMounted] = useState<ReadonlySet<PullRequestID>>(() => new Set(focus ? [focus] : []))
     const sortMode = useSyncExternalStore<SortMode>(subscribeSortMode, readSortMode, () => 'priority')
     const wrap = useRef<HTMLDivElement>(null)
-    const byNumber = new Map(board.prs.map((pr) => [pr.number, pr]))
+    const byId = new Map(board.prs.map((pr) => [pr.id, pr]))
+    const byIdRef = useRef(byId)
+    const showEnv = board.prs.some((pr) => pr.env.kind !== 'none')
+    const showRepo = board.repositories.length > 1
+    const columns = 12 + Number(showEnv) + Number(showRepo)
+    const customGroups = board.groups.filter((group) => group.kind === 'custom')
 
-    function priorityOf(pr: PullRequestNumber) {
-        return notes.get(String(pr))?.priority ?? null
+    function priorityOf(pr: PullRequestID) {
+        return notes.get(`pr:${pr}`)?.priority ?? null
     }
 
-    function toggle(pr: PullRequestNumber, open?: boolean) {
+    function toggle(pr: PullRequestID, open?: boolean) {
+        if ((open ?? !expanded.has(pr)) && byId.get(pr)?.unread) void markReadAction(pr)
         setMounted((current) => (current.has(pr) ? current : new Set(current).add(pr)))
         setExpanded((current) => {
             const next = open ?? !current.has(pr)
@@ -76,28 +73,28 @@ export function BoardTable({ board, review, initialNotes }: Props) {
         })
     }
 
-    function switchSort() {
-        writeSortMode(sortMode === 'priority' ? 'updated' : 'priority')
-    }
-
     function ordered(group: PullRequestGroup) {
-        if (group.id === 'stack' || sortMode === 'updated') return group.prs
+        if (group.kind === 'archive' || group.kind === 'custom' || sortMode === 'updated') return group.prs
         return group.prs.toSorted((a, b) => (priorityOf(a) ?? 99) - (priorityOf(b) ?? 99))
     }
 
-    function rows(numbers: PullRequestNumber[]) {
-        return numbers
-            .map((number) => byNumber.get(number))
+    function rows(ids: PullRequestID[]) {
+        return ids
+            .map((id) => byId.get(id))
             .filter((pr): pr is PullRequest => pr !== undefined)
             .map((pr) => (
                 <PullRequestRow
-                    key={pr.number}
+                    key={pr.id}
                     pr={pr}
-                    review={review}
-                    note={notes.get(String(pr.number))}
-                    expanded={expanded.has(pr.number)}
-                    mounted={mounted.has(pr.number)}
-                    onToggle={(open) => toggle(pr.number, open)}
+                    board={board}
+                    columns={columns}
+                    showEnv={showEnv}
+                    showRepo={showRepo}
+                    groups={customGroups}
+                    note={notes.get(`pr:${pr.id}`)}
+                    expanded={expanded.has(pr.id)}
+                    mounted={mounted.has(pr.id)}
+                    onToggle={(open) => toggle(pr.id, open)}
                     onSave={save}
                 />
             ))
@@ -107,8 +104,26 @@ export function BoardTable({ board, review, initialNotes }: Props) {
         [...expanded],
         sortMode,
         board.groups.map((group) => ordered(group)),
+        board.links.map((link) => link.id),
         [...notes.values()].map((note) => [note.id, note.text?.length ?? 0]),
     ])
+
+    useEffect(() => {
+        if (!focus) return
+        if (byIdRef.current.get(focus)?.unread) void markReadAction(focus)
+        wrap.current?.querySelector(`tr.row[data-pr="${focus}"]`)?.scrollIntoView({ block: 'center' })
+    }, [focus])
+
+    if (board.prs.length === 0)
+        return (
+            <p className="board-empty">
+                {board.mine
+                    ? 'Er wacht nu niets op jou.'
+                    : board.view === 'archive'
+                      ? 'Geen gemergede of gesloten PR’s in de laatste 30 dagen.'
+                      : 'Geen open pull requests.'}
+            </p>
+        )
 
     return (
         <div className="table-wrap" ref={wrap}>
@@ -116,99 +131,41 @@ export function BoardTable({ board, review, initialNotes }: Props) {
                 <thead>
                     <tr>
                         <th title="Klik op een rij of op Details om de review threads, de diff en de notitie te zien">
-                            PR · klik om te openen
+                            PR
                         </th>
+                        {showRepo && <th>Repository</th>}
                         <th>Ticket</th>
                         <th>Titel</th>
                         <th>Diff</th>
-                        <th className="envcol">Test env</th>
+                        {showEnv && <th className="envcol">Test env</th>}
                         <th>Pipeline</th>
                         <th>Draft</th>
                         <th>Auteur</th>
-                        <th>Assignee</th>
+                        <th>Reviewer</th>
                         <th>Review</th>
                         <th>Prio</th>
                         <th>Reviewtijd</th>
-                        <th>Bijgewerkt</th>
+                        <th>{board.view === 'archive' ? 'Gesloten' : 'Bijgewerkt'}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {board.groups.map((group) => {
-                        const sortable = group.id !== 'stack'
-                        const anyPriority = group.prs.some((pr) => priorityOf(pr) !== null)
-                        const headClass =
-                            group.id === 'stack'
-                                ? 'group-head'
-                                : `group-head other${group.id === 'drafts' ? ' drafts' : ''}`
-                        return [
-                            <tr key={`${group.id}-head`} className={headClass}>
-                                <td colSpan={GROUP_SPAN}>
-                                    <span className="gtitle">{group.title}</span>
-                                    {sortable && (
-                                        <button
-                                            type="button"
-                                            className={sortMode === 'priority' ? 'sort-toggle on' : 'sort-toggle'}
-                                            hidden={!anyPriority}
-                                            title={
-                                                sortMode === 'priority'
-                                                    ? 'Klik om op bijgewerkt te sorteren'
-                                                    : 'Klik om op prioriteit te sorteren'
-                                            }
-                                            onClick={switchSort}
-                                        >
-                                            {sortMode === 'priority' ? 'Volgorde: prioriteit' : 'Volgorde: bijgewerkt'}
-                                        </button>
-                                    )}
-                                    {group.description && <span className="gdesc">{group.description}</span>}
-                                    {group.id === 'stack' && (
-                                        <div className="note-host stack">
-                                            <NoteEditor id="stack" note={notes.get('stack')} onSave={save} />
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>,
-                            ...rows(ordered(group)),
-                            ...(group.id === 'stack'
-                                ? [
-                                      <tr key="stack-note" className="group-note">
-                                          <td colSpan={GROUP_SPAN}>
-                                              <div className="stack-note">
-                                                  <div className="sn-text">
-                                                      <span className="sn-label">Eindresultaat</span>
-                                                      <p>
-                                                          Alle branches hierboven zijn al gemerged naar{' '}
-                                                          <code>{board.stack.branch}</code>. Elke keer als ik feedback
-                                                          verwerk, rebase ik vanaf die branch de hele stack omhoog tot
-                                                          en met de gedeployde test environment.
-                                                      </p>
-                                                  </div>
-                                                  <a
-                                                      className="sn-link"
-                                                      href={board.stack.envUrl}
-                                                      target="_blank"
-                                                      rel="noopener"
-                                                  >
-                                                      <span className="sn-dot" aria-hidden="true" />
-                                                      Open test environment
-                                                      <span aria-hidden="true">↗</span>
-                                                  </a>
-                                              </div>
-                                          </td>
-                                      </tr>,
-                                      <tr key="stack-gap" className="group-gap">
-                                          <td colSpan={GROUP_SPAN}>
-                                              <span className="step ghost">↓</span>
-                                              <code>{board.stack.branch}</code> naar master. Nog geen PR.
-                                          </td>
-                                      </tr>,
-                                      ...rows(group.trailing ?? []),
-                                  ]
-                                : []),
-                        ]
-                    })}
+                    {board.groups.map((group) => [
+                        <GroupHeader
+                            key={`${group.id}-head`}
+                            group={group}
+                            columns={columns}
+                            note={notes.get(`group:${group.id}`)}
+                            sortMode={sortMode}
+                            sortable={group.kind === 'open' || group.kind === 'drafts'}
+                            anyPriority={group.prs.some((pr) => priorityOf(pr) !== null)}
+                            onSort={() => writeSortMode(sortMode === 'priority' ? 'updated' : 'priority')}
+                            onSave={save}
+                        />,
+                        ...rows(ordered(group)),
+                    ])}
                 </tbody>
             </table>
-            <StackLinks wrap={wrap} layout={layout} />
+            <StackLinks wrap={wrap} layout={layout} links={board.links} />
         </div>
     )
 }

@@ -3,25 +3,25 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { Editable } from '@/features/board/components/editable'
-import { PR_NOTE_COPY, STACK_NOTE_COPY } from '@/features/board/copy'
 import { formatDateTime } from '@/features/board/format'
 import { NoteSaveError } from '@/features/board/hooks/use-notes'
 import type { Note, NoteID, NotePatch } from '@/features/board/types'
 
 type Props = {
     id: NoteID
+    label: string
     note: Note | undefined
     onSave: (id: NoteID, patch: NotePatch) => Promise<void>
 }
 
-export function NoteEditor({ id, note, onSave }: Props) {
-    const copy = id === 'stack' ? STACK_NOTE_COPY : PR_NOTE_COPY
+export function NoteEditor({ id, label, note, onSave }: Props) {
     const text = note?.text ?? ''
     const [draft, setDraft] = useState(text)
     const [dirty, setDirty] = useState(false)
     const [busy, setBusy] = useState(false)
     const [status, setStatus] = useState<{ message: string; bad: boolean }>({ message: '', bad: false })
     const area = useRef<HTMLTextAreaElement>(null)
+    const fieldId = `note-${id.replace(':', '-')}`
 
     useEffect(() => {
         if (!dirty && document.activeElement !== area.current) setDraft(text)
@@ -35,15 +35,12 @@ export function NoteEditor({ id, note, onSave }: Props) {
             setDirty(false)
             setDraft(value)
             setStatus({
-                message: value ? 'Opgeslagen. Daan ziet dit als hij de pagina opent.' : 'Notitie verwijderd.',
+                message: value ? 'Opgeslagen. Iedereen in de workspace ziet dit.' : 'Notitie verwijderd.',
                 bad: false,
             })
         } catch (error) {
             setStatus({
-                message:
-                    error instanceof NoteSaveError && error.code === 'not_granted'
-                        ? 'Je hebt geen rechten om notities te wijzigen.'
-                        : 'Opslaan mislukt. Probeer het opnieuw.',
+                message: error instanceof NoteSaveError ? error.error.message : 'Opslaan mislukt. Probeer het opnieuw.',
                 bad: true,
             })
         } finally {
@@ -54,20 +51,24 @@ export function NoteEditor({ id, note, onSave }: Props) {
     return (
         <div className={text ? 'note-box has-note' : 'note-box'}>
             <div className="note-head">
-                <span className="note-label">{copy.label}</span>
-                {text && note && <span className="note-meta">bijgewerkt {formatDateTime(note.updatedAt)}</span>}
+                <span className="note-label">{label}</span>
+                {text && note && (
+                    <span className="note-meta">
+                        {note.updatedBy ? `${note.updatedBy} · ` : ''}bijgewerkt {formatDateTime(note.updatedAt)}
+                    </span>
+                )}
             </div>
             <Editable
-                fallback={text ? <p className="note-text">{text}</p> : <p className="note-empty">{copy.empty}</p>}
+                fallback={text ? <p className="note-text">{text}</p> : <p className="note-empty">Geen notitie.</p>}
             >
-                <label className="sr-only" htmlFor={`note-${id}`}>
-                    {copy.srLabel ?? `Notitie voor Daan bij PR ${id}`}
+                <label className="sr-only" htmlFor={fieldId}>
+                    {label}
                 </label>
                 <textarea
                     ref={area}
-                    id={`note-${id}`}
+                    id={fieldId}
                     rows={3}
-                    placeholder={copy.placeholder}
+                    placeholder="Context voor je collega's: wat is er veranderd, wat moet getest worden, wat heb je nodig?"
                     value={draft}
                     onChange={(event) => {
                         setDraft(event.target.value)

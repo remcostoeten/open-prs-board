@@ -8,16 +8,19 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "next typegen && tsc --noEmit",
         "lint": "oxlint",
         "format": "oxfmt",
         "format:check": "oxfmt --check",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
-        "db:seed": "bun src/server/db/seed.ts"
+        "db:seed": "bun src/server/db/seed.ts",
+        "user:verify": "bun scripts/verify-email.ts",
+        "test": "bun test"
     },
     "dependencies": {
         "@libsql/client": "^0.18.0",
+        "better-auth": "^1.7.7",
         "drizzle-orm": "^0.45.3",
         "next": "16.3.7",
         "react": "19.3.0",

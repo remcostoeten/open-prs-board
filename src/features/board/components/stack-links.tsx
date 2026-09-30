@@ -2,11 +2,14 @@
 
 import { type RefObject, useEffect, useRef } from 'react'
 
+import type { Link } from '@/features/board/types'
+
 const NS = 'http://www.w3.org/2000/svg'
 
 type Props = {
     wrap: RefObject<HTMLDivElement | null>
     layout: string
+    links: Link[]
 }
 
 function curve(points: number[]) {
@@ -31,55 +34,41 @@ function isVisible(node: Element | null | undefined): node is HTMLElement {
     return node instanceof HTMLElement && node.offsetParent !== null
 }
 
-function draw(wrap: HTMLDivElement, svg: SVGSVGElement, group: SVGGElement) {
+function anchor(table: HTMLTableElement, id: string) {
+    const node = table.querySelector(`tr.row[data-pr="${id}"] .prlink`)
+    return isVisible(node) ? node : null
+}
+
+function draw(wrap: HTMLDivElement, svg: SVGSVGElement, group: SVGGElement, links: Link[]) {
     const table = wrap.querySelector('table')
     if (!table) return
     const base = wrap.getBoundingClientRect()
     svg.setAttribute('width', String(table.offsetWidth))
     svg.setAttribute('height', String(table.offsetHeight))
     const paths: SVGPathElement[] = []
-
-    const steps = [...table.querySelectorAll('tbody .step')].filter(isVisible)
-    steps.forEach((step, index) => {
-        const next = steps[index + 1]
-        if (!next) return
-        const detail = step.closest('tr')?.nextElementSibling
-        if (detail instanceof HTMLElement && detail.classList.contains('detail') && !detail.hidden) return
-        const a = step.getBoundingClientRect()
-        const b = next.getBoundingClientRect()
-        const x1 = a.left + a.width / 2 - base.left + wrap.scrollLeft
-        const x2 = b.left + b.width / 2 - base.left + wrap.scrollLeft
-        const y1 = a.bottom - base.top + 5
-        const y2 = b.top - base.top - 11
-        if (y2 - y1 < 10) return
-        const middle = (y1 + y2) / 2
-        paths.push(line(curve([x1, y1, x1, middle, x2, middle, x2, y2]), 'stack-line'))
-    })
-
-    table.querySelectorAll<HTMLElement>('tr.row[data-link]').forEach((row) => {
-        const target = table.querySelector(`tr.row[data-pr="${row.dataset.link}"]`)
-        const from = row.querySelector('.prlink')
-        const to = target?.querySelector('.prlink')
-        if (!isVisible(from) || !isVisible(to)) return
+    for (const link of links) {
+        const from = anchor(table, link.fromId)
+        const to = anchor(table, link.toId)
+        if (!from || !to) continue
         const a = from.getBoundingClientRect()
         const b = to.getBoundingClientRect()
         const x = Math.min(a.left, b.left) - base.left + wrap.scrollLeft - 6
         const y1 = a.top + a.height / 2 - base.top
         const y2 = b.top + b.height / 2 - base.top
-        const bend = x - 26
+        const bend = x - Math.min(60, 18 + Math.abs(y2 - y1) / 12)
+        const direction = y2 >= y1 ? 1 : -1
         paths.push(
             line(
-                curve([x, y1, bend, y1 + 24, bend, y2 - 24, x - 2, y2]),
-                'stack-line link-line',
-                row.dataset.linkTitle ?? '',
+                curve([x, y1, bend, y1 + 24 * direction, bend, y2 - 24 * direction, x - 2, y2]),
+                link.origin === 'derived' ? 'stack-line' : 'stack-line link-line',
+                link.label ?? (link.origin === 'derived' ? 'Bouwt voort op deze branch' : 'Handmatige pijl'),
             ),
         )
-    })
-
+    }
     group.replaceChildren(...paths)
 }
 
-export function StackLinks({ wrap, layout }: Props) {
+export function StackLinks({ wrap, layout, links }: Props) {
     const svg = useRef<SVGSVGElement>(null)
     const group = useRef<SVGGElement>(null)
 
@@ -91,7 +80,7 @@ export function StackLinks({ wrap, layout }: Props) {
         function schedule() {
             cancelAnimationFrame(frame)
             frame = requestAnimationFrame(() => {
-                if (host && svg.current && group.current) draw(host, svg.current, group.current)
+                if (host && svg.current && group.current) draw(host, svg.current, group.current, links)
             })
         }
         const observer = new ResizeObserver(schedule)
@@ -104,7 +93,7 @@ export function StackLinks({ wrap, layout }: Props) {
             observer.disconnect()
             window.removeEventListener('resize', schedule)
         }
-    }, [wrap, layout])
+    }, [wrap, layout, links])
 
     return (
         <svg ref={svg} className="stack-links" aria-hidden="true">

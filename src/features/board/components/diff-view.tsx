@@ -4,7 +4,15 @@ import { type DiffRow, parseDiff } from '@/features/board/diff'
 import type { DiffFile, ReviewThread, ThreadFix } from '@/features/board/types'
 import type { Nullable } from '@/store/semantic'
 
-export function DiffLine({ row, hit = false }: { row: DiffRow; hit?: boolean }) {
+export function DiffLine({
+    row,
+    hit = false,
+    onComment,
+}: {
+    row: DiffRow
+    hit?: boolean
+    onComment?: (line: number) => void
+}) {
     if (row.kind === 'hunk')
         return (
             <tr className="h">
@@ -17,7 +25,20 @@ export function DiffLine({ row, hit = false }: { row: DiffRow; hit?: boolean }) 
     return (
         <tr className={[row.tone, hit ? 'hit' : ''].filter(Boolean).join(' ') || undefined}>
             <td className="n o">{row.old ?? ''}</td>
-            <td className="n">{row.new ?? ''}</td>
+            <td className="n">
+                {onComment && row.new !== null ? (
+                    <button
+                        type="button"
+                        className="line-comment"
+                        title={`Opmerking bij regel ${row.new}`}
+                        onClick={() => row.new !== null && onComment(row.new)}
+                    >
+                        {row.new}
+                    </button>
+                ) : (
+                    (row.new ?? '')
+                )}
+            </td>
             <td className="s">{row.sign}</td>
             <td>{row.text}</td>
         </tr>

@@ -1,73 +1,121 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
-import { cookies } from 'next/headers'
+import { and, asc, eq } from 'drizzle-orm'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-const COOKIE = 'board-editor'
-const MAX_AGE = 60 * 60 * 24 * 30
+import { auth } from '@/server/auth'
+import { member, organization } from '@/server/db/auth-schema'
+import { db } from '@/server/db/client'
+import { toRoute } from '@/shared/helpers/route'
+import type { ID } from '@/store/semantic'
 
-function sign(value: string) {
-    const secret = process.env.BOARD_SESSION_SECRET
-    if (!secret) throw new Error('BOARD_SESSION_SECRET is not set')
-    return createHmac('sha256', secret).update(value).digest('base64url')
+import type { Role } from '@/features/board/types'
+
+export type { Role }
+
+export type Viewer = {
+    id: ID
+    name: string
+    email: string
+    emailVerified: boolean
 }
 
-function safeEqual(a: string, b: string) {
-    const left = Buffer.from(a)
-    const right = Buffer.from(b)
-    return left.length === right.length && timingSafeEqual(left, right)
+export type Workspace = {
+    id: ID
+    name: string
+    slug: string
+    role: Role
 }
 
-/**
- * @name isEditingEnabled
- * @description Whether the server has a passcode and session secret configured. Without them every viewer is
- * read-only.
- *
- * @example
- * if (!isEditingEnabled()) return forbidden()
- */
-export function isEditingEnabled() {
-    return !!process.env.BOARD_EDITOR_PASSCODE && !!process.env.BOARD_SESSION_SECRET
-}
-
-/**
- * @name canEdit
- * @description Whether the current request carries a valid editor cookie.
- *
- * @example
- * if (!(await canEdit())) return Response.json({ error: 'not_granted' }, { status: 403 })
- */
-export async function canEdit() {
-    if (!isEditingEnabled()) return false
-    const value = (await cookies()).get(COOKIE)?.value
-    return !!value && safeEqual(value, sign('editor'))
+function toRole(role: string): Role {
+    return role === 'owner' || role === 'admin' ? role : 'member'
 }
 
 /**
- * @name signIn
- * @description Checks the passcode against `BOARD_EDITOR_PASSCODE` and sets the editor cookie on a match.
+ * @name getViewer
+ * @description Reads the Better Auth session from the request cookies. Returns null when nobody is signed in.
  *
  * @example
- * const ok = await signIn(formData.get('passcode'))
+ * const viewer = await getViewer()
  */
-export async function signIn(passcode: string) {
-    const expected = process.env.BOARD_EDITOR_PASSCODE
-    if (!isEditingEnabled() || !expected || !safeEqual(passcode, expected)) return false
-    ;(await cookies()).set(COOKIE, sign('editor'), {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        maxAge: MAX_AGE,
-    })
-    return true
+export async function getViewer(): Promise<Viewer | null> {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session) return null
+    const { id, name, email, emailVerified } = session.user
+    return { id, name, email, emailVerified }
 }
 
 /**
- * @name signOut
- * @description Removes the editor cookie.
+ * @name requireViewer
+ * @description Returns the signed-in user or redirects to the sign-in page, keeping the current path as `next`.
  *
  * @example
- * await signOut()
+ * const viewer = await requireViewer('/board')
  */
-export async function signOut() {
-    ;(await cookies()).delete(COOKIE)
+export async function requireViewer(next = '/board'): Promise<Viewer> {
+    const viewer = await getViewer()
+    if (!viewer) redirect(toRoute(`/sign-in?next=${encodeURIComponent(next)}`))
+    return viewer
+}
+
+/**
+ * @name findWorkspace
+ * @description Returns the viewer's active workspace with their role: the session's active organization when they
+ * are still a member of it, else their oldest membership. Null when they belong to none.
+ *
+ * @example
+ * const workspace = await findWorkspace(viewer.id)
+ */
+export async function findWorkspace(userId: ID): Promise<Workspace | null> {
+    const session = await auth.api.getSession({ headers: await headers() })
+    const active = session?.session.activeOrganizationId
+    const rows = await db
+        .select({ id: organization.id, name: organization.name, slug: organization.slug, role: member.role })
+        .from(member)
+        .innerJoin(organization, eq(member.organizationId, organization.id))
+        .where(eq(member.userId, userId))
+        .orderBy(asc(member.createdAt))
+    const row = rows.find((candidate) => candidate.id === active) ?? rows[0]
+    return row ? { ...row, role: toRole(row.role) } : null
+}
+
+/**
+ * @name requireWorkspace
+ * @description Returns the viewer and their active workspace, redirecting to sign-in or to workspace creation
+ * when either is missing.
+ *
+ * @example
+ * const { viewer, workspace } = await requireWorkspace('/board')
+ */
+export async function requireWorkspace(next = '/board') {
+    const viewer = await requireViewer(next)
+    const workspace = await findWorkspace(viewer.id)
+    if (!workspace) redirect('/onboarding/workspace')
+    return { viewer, workspace }
+}
+
+/**
+ * @name workspaceRole
+ * @description Returns the role of a user in a workspace, or null when they are not a member. Server actions call
+ * this with the workspace id they act on, never trusting a role sent by the client.
+ *
+ * @example
+ * if (!isManager(await workspaceRole(viewer.id, organizationId))) return denied()
+ */
+export async function workspaceRole(userId: ID, organizationId: ID): Promise<Role | null> {
+    const [row] = await db
+        .select({ role: member.role })
+        .from(member)
+        .where(and(eq(member.userId, userId), eq(member.organizationId, organizationId)))
+    return row ? toRole(row.role) : null
+}
+
+/**
+ * @name isManager
+ * @description Whether a role may connect repositories, manage invitations and delete data.
+ *
+ * @example
+ * isManager('admin') // true
+ */
+export function isManager(role: Role | null) {
+    return role === 'owner' || role === 'admin'
 }

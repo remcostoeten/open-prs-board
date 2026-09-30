@@ -4,10 +4,14 @@ function now() {
     return new Date().toISOString()
 }
 
+function newId() {
+    return crypto.randomUUID()
+}
+
 /**
  * @name baseEntitySchema
- * @description Returns the managed `id`, `createdAt` and `updatedAt` columns shared by every table, plus
- * `deletedAt` when the table soft-deletes. Spread it into a table definition.
+ * @description Returns the managed `id`, `createdAt` and `updatedAt` columns shared by every domain table. The id
+ * defaults to a random UUID. Spread it into a table definition.
  *
  * @example
  * export const notes = sqliteTable('notes', {
@@ -17,7 +21,7 @@ function now() {
  */
 export function baseEntitySchema() {
     return {
-        id: text('id').primaryKey(),
+        id: text('id').primaryKey().$defaultFn(newId),
         createdAt: text('created_at').notNull().$defaultFn(now),
         updatedAt: text('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
     }

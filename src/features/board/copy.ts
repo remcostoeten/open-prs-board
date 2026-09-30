@@ -1,10 +1,8 @@
 import type { Effort, PipelineState, Priority, ThreadStatus } from '@/features/board/types'
 
-export const AUTHOR = 'Remco'
-
 export const THREAD_STATUS: Record<ThreadStatus, string> = {
-    open: 'Open, jij bent aan zet',
-    recheck: 'Daan moet opnieuw kijken',
+    open: 'Open, auteur aan zet',
+    recheck: 'Reviewer is aan zet',
     resolved: 'Resolved',
 }
 
@@ -23,18 +21,4 @@ export const PIPELINE: Record<PipelineState, { tone: string; label: string }> = 
     missing: { tone: 'none', label: 'Nog geen pipeline op de head' },
 }
 
-export const STACK_NOTE_COPY = {
-    label: 'Notitie voor Daan bij de hele stack',
-    placeholder:
-        'Geef Daan context bij de hele APP-stack: wat er sinds zijn laatste ronde is veranderd, in welke volgorde hij het beste kan kijken en wat je van hem nodig hebt.',
-    srLabel: 'Notitie voor Daan bij de hele APP-stack',
-    empty: 'Geen notitie bij de stack.',
-}
-
-export const PR_NOTE_COPY = {
-    label: 'Notitie voor Daan',
-    placeholder:
-        'Geef Daan context bij deze PR: wat er is veranderd sinds zijn review, wat hij moet testen en wat je van hem nodig hebt.',
-    srLabel: null,
-    empty: 'Geen notitie bij deze PR.',
-}
+export const PROVIDER_LABEL: Record<string, string> = { bitbucket: 'Bitbucket', github: 'GitHub', snapshot: 'Snapshot' }
