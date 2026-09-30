@@ -4,5 +4,12 @@
     "printWidth": 120,
     "semi": false,
     "singleQuote": true,
-    "ignorePatterns": ["diffs/**", "**/node_modules/**", "tools/oxlint/anti-slop/**"]
+    "ignorePatterns": [
+        "diffs/**",
+        "**/node_modules/**",
+        "tools/oxlint/anti-slop/**",
+        ".next/**",
+        "drizzle/meta/**",
+        "next-env.d.ts"
+    ]
 }
