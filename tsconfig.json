@@ -13,6 +13,7 @@
         "jsx": "react-jsx",
         "incremental": true,
         "skipLibCheck": true,
+        "types": ["bun"],
         "plugins": [
             {
                 "name": "next"

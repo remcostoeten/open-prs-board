@@ -77,12 +77,13 @@ export async function closePullRequest(id: ID, state: 'merged' | 'declined', clo
 /**
  * @name storeThreads
  * @description Upserts provider threads and their comments for one PR and removes provider comments that no
- * longer exist upstream. Board threads and board comments are never touched.
+ * longer exist upstream. Records the PR's provider `updatedAt` as the version the threads belong to, so they are
+ * refetched only when the PR changes. Board threads and board comments are never touched.
  *
  * @example
- * await storeThreads(row.id, syncedThreads)
+ * await storeThreads(row.id, syncedThreads, row.providerUpdatedAt)
  */
-export async function storeThreads(pullRequestId: ID, list: SyncedThread[]) {
+export async function storeThreads(pullRequestId: ID, list: SyncedThread[], version: string) {
     for (const thread of list) {
         const values = {
             path: thread.path,
@@ -121,7 +122,7 @@ export async function storeThreads(pullRequestId: ID, list: SyncedThread[]) {
     }
     await db
         .update(pullRequests)
-        .set({ threadsSyncedAt: new Date().toISOString(), threadsErrorCode: null })
+        .set({ threadsSyncedAt: version, threadsErrorCode: null })
         .where(eq(pullRequests.id, pullRequestId))
 }
 

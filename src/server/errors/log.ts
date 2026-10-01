@@ -1,6 +1,9 @@
 import type { AppError } from '@/shared/errors/result'
 
-const SECRET = /(bearer|token|secret|password|authorization)(["'\s:=]+)[^\s"',}]+/gi
+// Matches a Bearer or Basic credential, the value after a token-like key, and long opaque tokens.
+const CREDENTIAL = /\b(bearer|basic)\s+[^\s"',}]+/gi
+const KEYED =
+    /((?:access_|refresh_|id_)?token|secret|password|authorization|client_secret)(["'\s:=]+)(?!\[redacted\]|bearer\b|basic\b)[^\s"',}&]+/gi
 
 /**
  * @name redact
@@ -10,7 +13,7 @@ const SECRET = /(bearer|token|secret|password|authorization)(["'\s:=]+)[^\s"',}]
  * redact('Authorization: Bearer abc') // 'Authorization: [redacted]'
  */
 export function redact(text: string) {
-    return text.replace(SECRET, '$1$2[redacted]')
+    return text.replace(CREDENTIAL, '$1 [redacted]').replace(KEYED, '$1$2[redacted]')
 }
 
 /**

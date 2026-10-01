@@ -119,11 +119,11 @@ async function syncThreads(state: RunState, ids: ID[]) {
     if (ids.length === 0) return true
     const rows = await db.select().from(pullRequests).where(inArray(pullRequests.id, ids))
     for (const row of rows) {
-        if (row.threadsSyncedAt && row.threadsSyncedAt >= row.providerUpdatedAt) continue
+        if (row.threadsSyncedAt === row.providerUpdatedAt) continue
         if (nearDeadline(state)) return false
         const result = await retry(state, () => state.adapter.listThreads(state.ctx, row.externalId))
         if (result.ok) {
-            await storeThreads(row.id, result.value)
+            await storeThreads(row.id, result.value, row.providerUpdatedAt)
             state.stats.threads += result.value.length
         } else {
             state.stats.failedThreads++

@@ -18,13 +18,16 @@ type RequestOptions = {
 
 /**
  * @name retryAfterMs
- * @description Reads `Retry-After` (seconds or an HTTP date) from a response, in milliseconds. Null when absent.
+ * @description Reads `Retry-After` (seconds or an HTTP date), or else `X-RateLimit-Reset` (epoch seconds), from a
+ * response, in milliseconds. Null when neither is present.
  *
  * @example
  * retryAfterMs(response) // 60000
  */
 export function retryAfterMs(response: Response) {
     const header = response.headers.get('retry-after')
+    const reset = Number(response.headers.get('x-ratelimit-reset'))
+    if (!header && reset > 0) return Math.max(0, reset * 1000 - Date.now())
     if (!header) return null
     const seconds = Number(header)
     if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000)
