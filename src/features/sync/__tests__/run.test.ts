@@ -1,16 +1,13 @@
-import { beforeAll, describe, expect, test } from 'bun:test'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import type { ProviderAdapter, SyncedPullRequest, SyncedThread } from '@/features/providers/types'
 import { fail, ok } from '@/shared/errors/result'
 
-process.env.DATABASE_URL = `file:${join(mkdtempSync(join(tmpdir(), 'board-sync-')), 'test.db')}`
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? 'postgres://board:board@localhost:5435/board_test'
 
-const { migrate } = await import('drizzle-orm/libsql/migrator')
-const { eq } = await import('drizzle-orm')
-const { db } = await import('@/server/db/client')
+const { migrate } = await import('drizzle-orm/postgres-js/migrator')
+const { eq, sql } = await import('drizzle-orm')
+const { db, closeDatabase } = await import('@/server/db/client')
 const { organization } = await import('@/server/db/auth-schema')
 const { links, pullRequests, repositories, syncRuns, threads, comments } = await import('@/server/db/board-schema')
 const { registerAdapter } = await import('@/features/providers/registry')
@@ -96,6 +93,9 @@ async function sync() {
 }
 
 beforeAll(async () => {
+    await db.execute(sql`drop schema if exists drizzle cascade`)
+    await db.execute(sql`drop schema public cascade`)
+    await db.execute(sql`create schema public`)
     await migrate(db, { migrationsFolder: 'drizzle' })
     registerAdapter(fake)
     organizationId = crypto.randomUUID()
@@ -114,6 +114,10 @@ beforeAll(async () => {
         })
         .returning()
     repositoryId = repo?.id ?? ''
+})
+
+afterAll(async () => {
+    await closeDatabase()
 })
 
 describe('sync runs', () => {
@@ -177,7 +181,7 @@ describe('sync runs', () => {
         await sync()
         const closed = (await db.select().from(pullRequests)).find((row) => row.number === 2)
         expect(closed?.state).toBe('merged')
-        expect(closed?.closedAt).toBe('2026-09-03T10:00:00Z')
+        expect(closed?.closedAt).toBe('2026-09-03T10:00:00.000Z')
     })
 
     test('a long rate limit parks the run as partial instead of blocking', async () => {

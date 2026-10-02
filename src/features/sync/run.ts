@@ -12,6 +12,7 @@ import { withRetry } from '@/server/errors/retry'
 import { db } from '@/server/db/client'
 import { pullRequests, repositories, syncRuns } from '@/server/db/board-schema'
 import type { ID } from '@/store/semantic'
+import { isSameInstant } from '@/shared/helpers/time'
 
 export const ARCHIVE_DAYS = 30
 export const RETENTION_DAYS = 30
@@ -107,7 +108,7 @@ function nearDeadline(state: RunState) {
 
 async function syncPullRequest(state: RunState, synced: SyncedPullRequest, existingUpdatedAt: string | undefined) {
     let pr = synced
-    if (existingUpdatedAt !== synced.updatedAt) {
+    if (!isSameInstant(existingUpdatedAt, synced.updatedAt)) {
         const enriched = await retry(state, () => state.adapter.enrichPullRequest(state.ctx, synced))
         if (enriched.ok) pr = enriched.value
         else logError(withContext(enriched.error, state), 'sync.enrich')
@@ -119,7 +120,7 @@ async function syncThreads(state: RunState, ids: ID[]) {
     if (ids.length === 0) return true
     const rows = await db.select().from(pullRequests).where(inArray(pullRequests.id, ids))
     for (const row of rows) {
-        if (row.threadsSyncedAt === row.providerUpdatedAt) continue
+        if (isSameInstant(row.threadsSyncedAt, row.providerUpdatedAt)) continue
         if (nearDeadline(state)) return false
         const result = await retry(state, () => state.adapter.listThreads(state.ctx, row.externalId))
         if (result.ok) {

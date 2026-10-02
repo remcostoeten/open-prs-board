@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { boolean, index, integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import type {
     Effort,
@@ -21,9 +21,9 @@ import type {
 } from '@/features/sync/types'
 import type { ErrorCode } from '@/shared/errors/codes'
 import { organization, user } from './auth-schema'
-import { baseEntitySchema } from './helpers'
+import { baseEntitySchema, timestamp } from './helpers'
 
-export const repositories = sqliteTable(
+export const repositories = pgTable(
     'repositories',
     {
         ...baseEntitySchema(),
@@ -39,9 +39,9 @@ export const repositories = sqliteTable(
         status: text('status').$type<RepositoryStatus>().notNull().default('pending'),
         lastErrorCode: text('last_error_code').$type<ErrorCode>(),
         closedCursor: text('closed_cursor'),
-        lastSyncedAt: text('last_synced_at'),
-        disconnectedAt: text('disconnected_at'),
-        purgeAfter: text('purge_after'),
+        lastSyncedAt: timestamp('last_synced_at'),
+        disconnectedAt: timestamp('disconnected_at'),
+        purgeAfter: timestamp('purge_after'),
         webhookSecret: text('webhook_secret')
             .notNull()
             .$defaultFn(() => crypto.randomUUID().replaceAll('-', '')),
@@ -51,7 +51,7 @@ export const repositories = sqliteTable(
     ],
 )
 
-export const pullRequests = sqliteTable(
+export const pullRequests = pgTable(
     'pull_requests',
     {
         ...baseEntitySchema(),
@@ -63,7 +63,7 @@ export const pullRequests = sqliteTable(
         title: text('title').notNull(),
         url: text('url').notNull(),
         state: text('state').$type<PullRequestState>().notNull(),
-        draft: integer('draft', { mode: 'boolean' }).notNull().default(false),
+        draft: boolean('draft').notNull().default(false),
         author: text('author').notNull(),
         sourceBranch: text('source_branch').notNull(),
         targetBranch: text('target_branch').notNull(),
@@ -73,14 +73,14 @@ export const pullRequests = sqliteTable(
         files: integer('files'),
         pipeline: text('pipeline').$type<PipelineState>().notNull().default('missing'),
         review: text('review').$type<ReviewState>().notNull().default('none'),
-        environment: text('environment', { mode: 'json' }).$type<Environment>(),
+        environment: jsonb('environment').$type<Environment>(),
         ticketKey: text('ticket_key'),
         ticketOld: text('ticket_old'),
-        providerCreatedAt: text('provider_created_at').notNull(),
-        providerUpdatedAt: text('provider_updated_at').notNull(),
-        threadsSyncedAt: text('threads_synced_at'),
+        providerCreatedAt: timestamp('provider_created_at').notNull(),
+        providerUpdatedAt: timestamp('provider_updated_at').notNull(),
+        threadsSyncedAt: timestamp('threads_synced_at'),
         threadsErrorCode: text('threads_error_code').$type<ErrorCode>(),
-        closedAt: text('closed_at'),
+        closedAt: timestamp('closed_at'),
     },
     (table) => [
         uniqueIndex('pull_requests_repo_number_idx').on(table.repositoryId, table.number),
@@ -88,7 +88,7 @@ export const pullRequests = sqliteTable(
     ],
 )
 
-export const reviewers = sqliteTable(
+export const reviewers = pgTable(
     'pull_request_reviewers',
     {
         ...baseEntitySchema(),
@@ -101,7 +101,7 @@ export const reviewers = sqliteTable(
     (table) => [uniqueIndex('reviewers_pr_name_idx').on(table.pullRequestId, table.name)],
 )
 
-export const threads = sqliteTable(
+export const threads = pgTable(
     'threads',
     {
         ...baseEntitySchema(),
@@ -115,12 +115,12 @@ export const threads = sqliteTable(
         lineFrom: integer('line_from'),
         commit: text('commit'),
         changedCommit: text('changed_commit'),
-        changedAt: text('changed_at'),
+        changedAt: timestamp('changed_at'),
         url: text('url'),
         providerStatus: text('provider_status').$type<ProviderThreadStatus>(),
-        fix: text('fix', { mode: 'json' }).$type<ThreadFix>(),
+        fix: jsonb('fix').$type<ThreadFix>(),
         createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
-        resolvedAt: text('resolved_at'),
+        resolvedAt: timestamp('resolved_at'),
         resolvedBy: text('resolved_by').references(() => user.id, { onDelete: 'set null' }),
     },
     (table) => [
@@ -129,7 +129,7 @@ export const threads = sqliteTable(
     ],
 )
 
-export const comments = sqliteTable(
+export const comments = pgTable(
     'comments',
     {
         ...baseEntitySchema(),
@@ -141,8 +141,8 @@ export const comments = sqliteTable(
         authorId: text('author_id').references(() => user.id, { onDelete: 'set null' }),
         authorName: text('author_name').notNull(),
         body: text('body').notNull(),
-        postedAt: text('posted_at').notNull(),
-        deletedAt: text('deleted_at'),
+        postedAt: timestamp('posted_at').notNull(),
+        deletedAt: timestamp('deleted_at'),
     },
     (table) => [
         uniqueIndex('comments_external_idx').on(table.threadId, table.origin, table.externalId),
@@ -150,7 +150,7 @@ export const comments = sqliteTable(
     ],
 )
 
-export const groups = sqliteTable(
+export const groups = pgTable(
     'groups',
     {
         ...baseEntitySchema(),
@@ -164,7 +164,7 @@ export const groups = sqliteTable(
     (table) => [index('groups_org_idx').on(table.organizationId)],
 )
 
-export const groupMembers = sqliteTable(
+export const groupMembers = pgTable(
     'group_members',
     {
         ...baseEntitySchema(),
@@ -179,7 +179,7 @@ export const groupMembers = sqliteTable(
     (table) => [uniqueIndex('group_members_pr_idx').on(table.pullRequestId)],
 )
 
-export const links = sqliteTable(
+export const links = pgTable(
     'pull_request_links',
     {
         ...baseEntitySchema(),
@@ -191,13 +191,13 @@ export const links = sqliteTable(
             .references(() => pullRequests.id, { onDelete: 'cascade' }),
         label: text('label'),
         origin: text('origin').$type<LinkOrigin>().notNull(),
-        hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+        hidden: boolean('hidden').notNull().default(false),
         createdBy: text('created_by').references(() => user.id, { onDelete: 'set null' }),
     },
     (table) => [uniqueIndex('links_pair_idx').on(table.fromId, table.toId)],
 )
 
-export const notes = sqliteTable(
+export const notes = pgTable(
     'notes',
     {
         ...baseEntitySchema(),
@@ -214,7 +214,7 @@ export const notes = sqliteTable(
     (table) => [uniqueIndex('notes_pr_idx').on(table.pullRequestId), uniqueIndex('notes_group_idx').on(table.groupId)],
 )
 
-export const pullRequestReads = sqliteTable(
+export const pullRequestReads = pgTable(
     'pull_request_reads',
     {
         ...baseEntitySchema(),
@@ -224,12 +224,12 @@ export const pullRequestReads = sqliteTable(
         pullRequestId: text('pull_request_id')
             .notNull()
             .references(() => pullRequests.id, { onDelete: 'cascade' }),
-        lastReadAt: text('last_read_at').notNull(),
+        lastReadAt: timestamp('last_read_at').notNull(),
     },
     (table) => [uniqueIndex('reads_user_pr_idx').on(table.userId, table.pullRequestId)],
 )
 
-export const notifications = sqliteTable(
+export const notifications = pgTable(
     'notifications',
     {
         ...baseEntitySchema(),
@@ -243,12 +243,12 @@ export const notifications = sqliteTable(
         kind: text('kind').$type<'mention'>().notNull(),
         pullRequestId: text('pull_request_id').references(() => pullRequests.id, { onDelete: 'cascade' }),
         commentId: text('comment_id').references(() => comments.id, { onDelete: 'cascade' }),
-        readAt: text('read_at'),
+        readAt: timestamp('read_at'),
     },
     (table) => [index('notifications_user_idx').on(table.userId, table.readAt)],
 )
 
-export const diffCache = sqliteTable(
+export const diffCache = pgTable(
     'diff_cache',
     {
         ...baseEntitySchema(),
@@ -263,7 +263,7 @@ export const diffCache = sqliteTable(
     (table) => [uniqueIndex('diff_cache_pr_commit_idx').on(table.pullRequestId, table.commit)],
 )
 
-export const syncRuns = sqliteTable(
+export const syncRuns = pgTable(
     'sync_runs',
     {
         ...baseEntitySchema(),
@@ -279,13 +279,13 @@ export const syncRuns = sqliteTable(
         status: text('status').$type<SyncStatus>().notNull().default('queued'),
         phase: text('phase').$type<SyncPhase>(),
         attempt: integer('attempt').notNull().default(0),
-        leaseExpiresAt: text('lease_expires_at'),
-        nextAttemptAt: text('next_attempt_at'),
-        stats: text('stats', { mode: 'json' }).$type<SyncStats>(),
+        leaseExpiresAt: timestamp('lease_expires_at'),
+        nextAttemptAt: timestamp('next_attempt_at'),
+        stats: jsonb('stats').$type<SyncStats>(),
         errorCode: text('error_code').$type<ErrorCode>(),
         errorDetail: text('error_detail'),
-        startedAt: text('started_at'),
-        finishedAt: text('finished_at'),
+        startedAt: timestamp('started_at'),
+        finishedAt: timestamp('finished_at'),
     },
     (table) => [
         index('sync_runs_repo_idx').on(table.repositoryId, table.status),

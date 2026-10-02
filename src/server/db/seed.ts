@@ -9,7 +9,7 @@ import { enqueueSync } from '@/features/sync/queue'
 import { executeRun } from '@/features/sync/run'
 import { member, organization } from '@/server/db/auth-schema'
 import { groupMembers, groups, links, notes, pullRequests, repositories } from '@/server/db/board-schema'
-import { db } from '@/server/db/client'
+import { closeDatabase, db } from '@/server/db/client'
 
 const slug = process.argv[2]
 if (!slug) {
@@ -114,3 +114,4 @@ for (const [key, note] of Object.entries(snapshotNotes)) {
 }
 
 console.log(`Seeded ${rows.length} PRs, groups, links and notes into ${workspace.name}`)
+await closeDatabase()

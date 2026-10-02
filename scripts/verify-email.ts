@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 
 import { user } from '@/server/db/auth-schema'
-import { db } from '@/server/db/client'
+import { closeDatabase, db } from '@/server/db/client'
 
 const email = process.argv[2]?.toLowerCase()
 if (!email) {
@@ -14,3 +14,4 @@ const updated = await db
     .where(eq(user.email, email))
     .returning({ id: user.id })
 console.log(updated.length > 0 ? `Marked ${email} as verified` : `No user with email ${email}`)
+await closeDatabase()

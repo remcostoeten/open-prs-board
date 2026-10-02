@@ -28,7 +28,7 @@ export const auth = betterAuth({
     appName: 'PR board',
     baseURL: process.env.BETTER_AUTH_URL,
     secret: process.env.BETTER_AUTH_SECRET,
-    database: drizzleAdapter(db, { provider: 'sqlite', schema: authSchema }),
+    database: drizzleAdapter(db, { provider: 'pg', schema: authSchema }),
     emailAndPassword: { enabled: true, minPasswordLength: 10 },
     socialProviders: socialProviders(),
     account: {
