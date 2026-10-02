@@ -2,6 +2,8 @@ import { and, desc, eq, gt } from 'drizzle-orm'
 import Link from 'next/link'
 
 import { linkProviderAction } from '@/features/auth/actions'
+import { ApiTokenPanel } from '@/features/credentials/api-token-panel'
+import { loadCredential } from '@/features/credentials/queries'
 import { PROVIDER_LABEL } from '@/features/board/copy'
 import { formatDateTime } from '@/features/board/format'
 import { loadMembers, loadRepositories } from '@/features/board/queries'
@@ -33,7 +35,7 @@ function pendingInvitations(organizationId: string) {
 export async function SettingsScreen() {
     const { viewer, workspace } = await requireWorkspace('/settings')
     const manager = isManager(workspace.role)
-    const [members, repos, notifications, accounts, invitations, secrets] = await Promise.all([
+    const [members, repos, notifications, accounts, invitations, secrets, bitbucketToken] = await Promise.all([
         loadMembers(workspace.id),
         loadRepositories(workspace.id, workspace.role),
         loadNotifications(viewer.id, workspace.id),
@@ -45,6 +47,7 @@ export async function SettingsScreen() {
                   .from(repositories)
                   .where(eq(repositories.organizationId, workspace.id))
             : Promise.resolve([]),
+        loadCredential(viewer.id, 'bitbucket'),
     ])
     const linked = new Set(accounts.map((row) => row.provider))
     const baseUrl = process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'
@@ -77,10 +80,21 @@ export async function SettingsScreen() {
                     ))}
                     {configuredProviders().length === 0 && (
                         <li>
-                            Er is nog geen OAuth-provider ingesteld. Zet BITBUCKET_CLIENT_ID en BITBUCKET_CLIENT_SECRET.
+                            Er is geen OAuth-provider ingesteld. Koppel Bitbucket hieronder met een API-token, of zet
+                            BITBUCKET_CLIENT_ID en BITBUCKET_CLIENT_SECRET.
                         </li>
                     )}
                 </ul>
+                <ApiTokenPanel
+                    defaultEmail={viewer.email}
+                    stored={
+                        bitbucketToken && {
+                            username: bitbucketToken.username,
+                            displayName: bitbucketToken.displayName,
+                            updatedAt: formatDateTime(bitbucketToken.updatedAt),
+                        }
+                    }
+                />
             </section>
 
             <section id="repositories">

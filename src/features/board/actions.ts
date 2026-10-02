@@ -118,6 +118,7 @@ export async function loadDiffAction(prId: string): Promise<ActionResult<DiffFil
                     {
                         correlationId: actor.correlationId,
                         token: candidate.token,
+                        scheme: candidate.scheme,
                         repository: { slug: row.repository.slug, externalId: row.repository.externalId },
                         signal: AbortSignal.timeout(40_000),
                     },

@@ -57,6 +57,7 @@ export async function reconnectRepositoryAction(repositoryId: string): Promise<A
         adapter.listPullRequests({
             correlationId: actor.correlationId,
             token: token.value.token,
+            scheme: token.value.scheme,
             repository: { slug: repository.slug, externalId: repository.externalId },
             signal: AbortSignal.timeout(30_000),
         }),

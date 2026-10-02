@@ -8,6 +8,13 @@
       "when": 1790902529939,
       "tag": "0000_condemned_northstar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790944869098,
+      "tag": "0001_glossy_mulholland_black",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,7 @@ function ctx(): SyncContext {
     return {
         correlationId: 'test-correlation',
         token: 'secret-token',
+        scheme: 'bearer',
         repository: { slug: 'acme/web', externalId: '{uuid}' },
         signal: new AbortController().signal,
     }

@@ -7,6 +7,7 @@ function ctx(): SyncContext {
     return {
         correlationId: 'test-correlation',
         token: '',
+        scheme: 'bearer',
         repository: { slug: 'webshop', externalId: DUMMY_EXTERNAL_ID },
         signal: new AbortController().signal,
     }

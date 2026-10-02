@@ -292,3 +292,19 @@ export const syncRuns = pgTable(
         index('sync_runs_correlation_idx').on(table.correlationId),
     ],
 )
+
+export const providerCredentials = pgTable(
+    'provider_credentials',
+    {
+        ...baseEntitySchema(),
+        userId: text('user_id')
+            .notNull()
+            .references(() => user.id, { onDelete: 'cascade' }),
+        provider: text('provider').$type<ProviderId>().notNull(),
+        username: text('username').notNull(),
+        secret: text('secret').notNull(),
+        externalAccountId: text('external_account_id').notNull(),
+        displayName: text('display_name').notNull(),
+    },
+    (table) => [uniqueIndex('provider_credentials_user_provider_idx').on(table.userId, table.provider)],
+)

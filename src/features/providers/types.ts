@@ -16,9 +16,12 @@ export type CommitHash = string
 export type PullRequestState = 'open' | 'merged' | 'declined'
 export type ProviderThreadStatus = 'open' | 'resolved'
 
+export type AuthScheme = 'bearer' | 'basic'
+
 export type SyncContext = {
     correlationId: ID
     token: string
+    scheme: AuthScheme
     repository: { slug: string; externalId: ExternalID }
     signal: AbortSignal
 }

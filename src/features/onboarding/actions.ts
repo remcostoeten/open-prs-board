@@ -40,6 +40,7 @@ async function accessible(actor: Actor, provider: ProviderId): Promise<ActionRes
     const ctx = {
         correlationId: actor.correlationId,
         token: token.value.token,
+        scheme: token.value.scheme,
         repository: { slug: '', externalId: '' },
         signal: AbortSignal.timeout(60_000),
     }

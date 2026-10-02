@@ -11,6 +11,7 @@ import {
     repositorySchema,
     webhookSchema,
 } from '@/features/providers/bitbucket/schema'
+import { authorization } from '@/features/providers/authorization'
 import { splitUnifiedDiff } from '@/features/providers/diff'
 import type { ProviderAdapter, SyncContext, SyncedDiffFile, WebhookEvent } from '@/features/providers/types'
 import type { ErrorCode } from '@/shared/errors/codes'
@@ -36,7 +37,7 @@ function request(ctx: SyncContext, url: string, notFound: ErrorCode, accept = 'a
         context: context(ctx),
         classify: classifyError,
         notFound,
-        init: { headers: { Authorization: `Bearer ${ctx.token}`, Accept: accept } },
+        init: { headers: { Authorization: authorization(ctx), Accept: accept } },
     })
 }
 

@@ -6,6 +6,13 @@ export function pageSchema<Item extends z.ZodType>(item: Item) {
     return z.object({ values: z.array(item), next: z.string().optional() })
 }
 
+export const userSchema = z.object({
+    uuid: z.string(),
+    account_id: z.string().optional(),
+    display_name: z.string(),
+    links: z.object({ avatar: z.object({ href: z.string() }).optional() }).optional(),
+})
+
 export const repositorySchema = z.object({
     uuid: z.string(),
     full_name: z.string(),

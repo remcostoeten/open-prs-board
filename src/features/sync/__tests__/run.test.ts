@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { beforeAll, describe, expect, test } from 'bun:test'
 
 import type { ProviderAdapter, SyncedPullRequest, SyncedThread } from '@/features/providers/types'
 import { fail, ok } from '@/shared/errors/result'
@@ -7,7 +7,7 @@ process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? 'postgres://board:bo
 
 const { migrate } = await import('drizzle-orm/postgres-js/migrator')
 const { eq, sql } = await import('drizzle-orm')
-const { db, closeDatabase } = await import('@/server/db/client')
+const { db } = await import('@/server/db/client')
 const { organization } = await import('@/server/db/auth-schema')
 const { links, pullRequests, repositories, syncRuns, threads, comments } = await import('@/server/db/board-schema')
 const { registerAdapter } = await import('@/features/providers/registry')
@@ -114,10 +114,6 @@ beforeAll(async () => {
         })
         .returning()
     repositoryId = repo?.id ?? ''
-})
-
-afterAll(async () => {
-    await closeDatabase()
 })
 
 describe('sync runs', () => {

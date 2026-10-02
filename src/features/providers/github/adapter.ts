@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import type { z } from 'zod'
 
+import { authorization } from '@/features/providers/authorization'
 import { splitUnifiedDiff } from '@/features/providers/diff'
 import {
     groupThreads,
@@ -55,7 +56,7 @@ function request(ctx: SyncContext, url: string, notFound: ErrorCode, accept = 'a
         classify: classifyError,
         notFound,
         init: {
-            headers: { Authorization: `Bearer ${ctx.token}`, Accept: accept, 'X-GitHub-Api-Version': '2022-11-28' },
+            headers: { Authorization: authorization(ctx), Accept: accept, 'X-GitHub-Api-Version': '2022-11-28' },
         },
     })
 }

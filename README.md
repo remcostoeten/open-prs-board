@@ -81,7 +81,17 @@ To sync real repositories, create an OAuth app at the provider, put its id and s
 | Bitbucket | Workspace settings, OAuth consumers      | `http://localhost:3000/api/auth/oauth2/callback/bitbucket` | Account, email, repositories and pull requests          |
 | GitHub    | Settings, Developer settings, OAuth Apps | `http://localhost:3000/api/auth/callback/github`           | Requested at sign-in: `read:user`, `user:email`, `repo` |
 
-Sign in with the provider, or sign in to your existing account and link it, then choose repositories under Instellingen. The board syncs with the token of a workspace member who has an account at that provider.
+Sign in with the provider, or sign in to your existing account and link it, then choose repositories under Instellingen.
+
+### Bitbucket without an OAuth consumer
+
+When your Bitbucket workspace does not let you create an OAuth consumer, connect with a personal Atlassian API token instead. It needs no workspace admin and no variables in `.env.local`.
+
+1. Go to [id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens) and choose **Create API token with scopes**. Pick the Bitbucket app and only these read scopes: `read:user:bitbucket`, `read:repository:bitbucket` and `read:pullrequest:bitbucket`.
+2. In the board, open Instellingen, fill in your Atlassian email address and the token under "Bitbucket met een API-token" and save. The board checks the pair against Bitbucket before it stores the token, encrypted with `BETTER_AUTH_SECRET`.
+3. Bitbucket now shows up in the repository picker. Sync uses the token like any OAuth connection.
+
+API tokens expire, at most a year after you create them. When sync starts failing with an invalid connection, replace the token in Instellingen. Changing `BETTER_AUTH_SECRET` makes every stored token unreadable, so everyone has to enter theirs again. The board syncs with the token of a workspace member who has an account at that provider.
 
 A connected repository syncs right away. After that it syncs when a webhook arrives or when the cron route runs. Owners and admins find the webhook URL and secret per repository under Instellingen. Webhooks need a public URL, so on localhost you trigger the scheduled sync yourself:
 

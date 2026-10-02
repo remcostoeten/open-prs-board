@@ -91,6 +91,7 @@ async function openList(state: RunState): Promise<Result<SyncedPullRequest[]>> {
     let lastError: AppError | null = null
     for await (const candidate of candidateTokens(state.repository)) {
         state.ctx.token = candidate.token
+        state.ctx.scheme = candidate.scheme
         const result = await retry(state, () => state.adapter.listPullRequests(state.ctx))
         if (result.ok || (result.error.code !== 'access_lost' && result.error.code !== 'auth_expired')) return result
         lastError = result.error
@@ -196,6 +197,7 @@ async function syncRepository(state: RunState): Promise<Result<'complete' | 'par
 async function syncOne(state: RunState, externalId: string): Promise<Result<'complete' | 'partial'>> {
     for await (const candidate of candidateTokens(state.repository)) {
         state.ctx.token = candidate.token
+        state.ctx.scheme = candidate.scheme
         const current = await retry(state, () => state.adapter.getPullRequest(state.ctx, externalId))
         if (!current.ok) {
             if (current.error.code === 'access_lost') continue
@@ -275,6 +277,7 @@ export async function executeRun(id: ID, budgetMs = RUN_BUDGET_MS) {
         ctx: {
             correlationId: run.correlationId,
             token: '',
+            scheme: 'bearer',
             repository: { slug: repository.slug, externalId: repository.externalId },
             signal: controller.signal,
         },

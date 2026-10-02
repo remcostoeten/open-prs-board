@@ -1,14 +1,9 @@
 import type { GenericOAuthConfig } from 'better-auth/plugins'
 import { z } from 'zod'
 
-const API = 'https://api.bitbucket.org/2.0'
+import { userSchema } from '@/features/providers/bitbucket/schema'
 
-const userSchema = z.object({
-    uuid: z.string(),
-    account_id: z.string().optional(),
-    display_name: z.string(),
-    links: z.object({ avatar: z.object({ href: z.string() }).optional() }).optional(),
-})
+const API = 'https://api.bitbucket.org/2.0'
 
 const emailsSchema = z.object({
     values: z.array(z.object({ email: z.string(), is_primary: z.boolean(), is_confirmed: z.boolean() })),

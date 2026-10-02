@@ -1,6 +1,7 @@
 export type ErrorCode =
     | 'auth_expired'
     | 'auth_revoked'
+    | 'invalid_credentials'
     | 'access_lost'
     | 'forbidden'
     | 'not_found'
@@ -31,6 +32,12 @@ export const ERRORS: Record<ErrorCode, ErrorSpec> = {
         retryable: false,
         recovery: 'reauthenticate',
         message: 'Je {provider}-koppeling is niet meer geldig. Log opnieuw in met {provider}.',
+    },
+    invalid_credentials: {
+        retryable: false,
+        recovery: 'none',
+        message:
+            '{provider} accepteerde dit e-mailadres en deze API-token niet. Controleer beide en de scopes van de token.',
     },
     access_lost: {
         retryable: false,

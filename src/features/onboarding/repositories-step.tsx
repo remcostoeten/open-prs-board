@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import Link from 'next/link'
 
+import { loadCredential } from '@/features/credentials/queries'
 import { RepositoryPicker } from '@/features/onboarding/repository-picker'
 import { Steps } from '@/features/onboarding/steps'
 import type { ProviderId } from '@/features/providers/types'
@@ -20,10 +21,16 @@ export async function RepositoriesStep() {
                 </Link>
             </div>
         )
-    const linked = await db.select({ provider: account.providerId }).from(account).where(eq(account.userId, viewer.id))
-    const linkedIds = new Set(linked.map((row) => row.provider))
+    const [linked, bitbucketToken] = await Promise.all([
+        db.select({ provider: account.providerId }).from(account).where(eq(account.userId, viewer.id)),
+        loadCredential(viewer.id, 'bitbucket'),
+    ])
+    const linkedIds = new Set<string>(linked.map((row) => row.provider))
+    if (bitbucketToken) linkedIds.add('bitbucket')
+    const oauth = configuredProviders()
+    const ids: ProviderId[] = bitbucketToken && !oauth.includes('bitbucket') ? ['bitbucket', ...oauth] : oauth
     const providers: { id: ProviderId; linked: boolean }[] = [
-        ...configuredProviders().map((id) => ({ id, linked: linkedIds.has(id) })),
+        ...ids.map((id) => ({ id, linked: linkedIds.has(id) })),
         { id: 'snapshot', linked: true },
     ]
     return (

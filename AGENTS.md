@@ -104,6 +104,7 @@ A provider is an object that satisfies `ProviderAdapter` in `src/features/provid
 - Parse every provider response with the adapter's Zod schema, then map it to the `Synced*` types in a `map.ts`. No provider-specific shape leaves the adapter folder.
 - Map HTTP failures to error codes, so the engine can tell `rate_limited` from `access_lost`.
 - The `snapshot` adapter reads the file datasets in `data/` and needs no token. Use it for tests and for local work.
+- A member reaches a provider through a Better Auth OAuth account or, for Bitbucket, an Atlassian API token in `provider_credentials` (`src/features/credentials`). `src/features/sync/tokens.ts` turns both into a `ProviderToken` with a `scheme`, and adapters build the header with `authorization(ctx)`, never by hand.
 
 ## Do not
 
