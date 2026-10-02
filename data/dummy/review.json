@@ -1,0 +1,259 @@
+{
+    "threads": {
+        "101": [
+            {
+                "id": 900101,
+                "who": "Mila",
+                "path": "src/features/cart/cart-summary.tsx",
+                "line": 19,
+                "lineFrom": 15,
+                "created": "2026-09-22T08:14:00+00:00",
+                "status": "resolved",
+                "changed": "3c9e1f7a",
+                "changedAt": "2026-09-23T08:58:00+02:00",
+                "replied": true,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/101/_/diff#comment-900101",
+                "messages": [
+                    {
+                        "who": "Mila",
+                        "at": "2026-09-22T08:14:00+00:00",
+                        "text": "We have `formatPrice` in `shared/format-price` for this. `toFixed` gives `€ 12.50` and we show prices as `€ 12,50` everywhere else."
+                    },
+                    {
+                        "who": "Sanne",
+                        "at": "2026-09-23T07:02:00+00:00",
+                        "text": "Good catch, both places use `formatPrice` now."
+                    }
+                ]
+            }
+        ],
+        "102": [
+            {
+                "id": 900201,
+                "who": "Mila",
+                "path": "src/features/checkout/address-form.tsx",
+                "line": 20,
+                "lineFrom": null,
+                "created": "2026-09-25T09:31:00+00:00",
+                "status": "recheck",
+                "changed": "b71d0e42",
+                "changedAt": "2026-09-29T15:44:00+02:00",
+                "replied": true,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/102/_/diff#comment-900201",
+                "messages": [
+                    {
+                        "who": "Mila",
+                        "at": "2026-09-25T09:31:00+00:00",
+                        "text": "Typing `8911 ab` gets rejected. People type lowercase postcodes all the time, can we normalise before validating?"
+                    },
+                    {
+                        "who": "Sanne",
+                        "at": "2026-09-29T13:48:00+00:00",
+                        "text": "Added `normalizePostcode`, the input uppercases while you type and the validator uses it too."
+                    }
+                ]
+            },
+            {
+                "id": 900202,
+                "who": "Mila",
+                "path": "src/features/checkout/validate.ts",
+                "line": 18,
+                "lineFrom": 15,
+                "created": "2026-09-25T09:40:00+00:00",
+                "status": "open",
+                "changed": null,
+                "changedAt": null,
+                "replied": false,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/102/_/diff#comment-900202",
+                "messages": [
+                    {
+                        "who": "Mila",
+                        "at": "2026-09-25T09:40:00+00:00",
+                        "text": "This returns only the first error. With an empty form you fix the name, submit, and then hear about the street. I would collect all of them."
+                    }
+                ]
+            },
+            {
+                "id": 900203,
+                "who": "Mila",
+                "path": null,
+                "line": null,
+                "lineFrom": null,
+                "created": "2026-09-25T09:44:00+00:00",
+                "status": "recheck",
+                "changed": null,
+                "changedAt": null,
+                "replied": true,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/102/_/diff#comment-900203",
+                "messages": [
+                    {
+                        "who": "Mila",
+                        "at": "2026-09-25T09:44:00+00:00",
+                        "text": "Can you add a test for the empty form and for a lowercase postcode?"
+                    },
+                    {
+                        "who": "Sanne",
+                        "at": "2026-09-29T13:50:00+00:00",
+                        "text": "Both are in `validate.test.ts`."
+                    }
+                ]
+            }
+        ],
+        "103": [
+            {
+                "id": 900301,
+                "who": "Mila",
+                "path": "src/features/checkout/banks.ts",
+                "line": 1,
+                "lineFrom": null,
+                "created": "2026-09-29T15:02:00+00:00",
+                "status": "open",
+                "changed": null,
+                "changedAt": null,
+                "replied": false,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/103/_/diff#comment-900301",
+                "messages": [
+                    {
+                        "who": "Mila",
+                        "at": "2026-09-29T15:02:00+00:00",
+                        "text": "The issuer list changes a few times a year. The payment provider has an endpoint for it, I would fetch it instead of hard-coding the banks."
+                    }
+                ]
+            }
+        ],
+        "109": [
+            {
+                "id": 900901,
+                "who": "Jesse",
+                "path": "package.json",
+                "line": 8,
+                "lineFrom": null,
+                "created": "2026-09-18T07:20:00+00:00",
+                "status": "open",
+                "changed": null,
+                "changedAt": null,
+                "replied": false,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/109/_/diff#comment-900901",
+                "messages": [
+                    {
+                        "who": "Jesse",
+                        "at": "2026-09-18T07:20:00+00:00",
+                        "text": "Let’s not rename `format` to `fmt`, the CI job and the README both call `format`."
+                    }
+                ]
+            }
+        ],
+        "110": [
+            {
+                "id": 901001,
+                "who": "Jesse",
+                "path": "src/features/cart/total.ts",
+                "line": 6,
+                "lineFrom": null,
+                "created": "2026-09-26T10:05:00+00:00",
+                "status": "recheck",
+                "changed": "e4a02c95",
+                "changedAt": "2026-09-28T14:06:00+02:00",
+                "replied": true,
+                "url": "https://bitbucket.org/example-team/webshop/pull-requests/110/_/diff#comment-901001",
+                "messages": [
+                    {
+                        "who": "Jesse",
+                        "at": "2026-09-26T10:05:00+00:00",
+                        "text": "Rounding per line still drifts: three stickers of € 0,33 give € 1,20 on the invoice and € 1,21 here. Sum first, round once."
+                    },
+                    {
+                        "who": "Sanne",
+                        "at": "2026-09-28T12:01:00+00:00",
+                        "text": "Done, and there is a test with exactly that cart."
+                    }
+                ]
+            }
+        ]
+    },
+    "review": {
+        "101": {
+            "who": "Mila",
+            "state": "approved"
+        },
+        "102": {
+            "who": "Mila",
+            "state": "changes_requested"
+        },
+        "103": {
+            "who": "Mila",
+            "state": null
+        },
+        "108": {
+            "who": "Jesse",
+            "state": "approved"
+        },
+        "109": {
+            "who": "Jesse",
+            "state": "changes_requested"
+        },
+        "110": {
+            "who": "Jesse",
+            "state": "changes_requested"
+        }
+    },
+    "fixes": {
+        "900101": {
+            "fromCommit": "9a41c2d0",
+            "toCommit": "3c9e1f7a",
+            "diff": "@@ -1,4 +1,5 @@\n import type { CartLine } from '@/features/cart/types'\n+import { formatPrice } from '@/shared/format-price'\n \n type Props = {\n     lines: CartLine[]\n@@ -11,11 +12,11 @@\n             <ul>\n                 {lines.map((line) => (\n                     <li key={line.id}>\n-                        {line.quantity} x {line.title} <span>{'€ ' + (line.price / 100).toFixed(2)}</span>\n+                        {line.quantity} x {line.title} <span>{formatPrice(line.price)}</span>\n                     </li>\n                 ))}\n             </ul>\n-            <p className=\"total\">{'€ ' + (total / 100).toFixed(2)}</p>\n+            <p className=\"total\">{formatPrice(total)}</p>\n         </section>\n     )\n }\n",
+            "excerpt": {
+                "start": 12,
+                "lines": [
+                    "                {lines.map((line) => (",
+                    "                    <li key={line.id}>",
+                    "                        {line.quantity} x {line.title} <span>{'€ ' + (line.price / 100).toFixed(2)}</span>",
+                    "                    </li>",
+                    "                ))}",
+                    "            </ul>",
+                    "            <p className=\"total\">{'€ ' + (total / 100).toFixed(2)}</p>",
+                    "        </section>",
+                    "    )"
+                ],
+                "from": 14,
+                "to": 18
+            },
+            "deleted": false
+        },
+        "900201": {
+            "fromCommit": "5d2f8a13",
+            "toCommit": "b71d0e42",
+            "diff": "@@ -1,6 +1,6 @@\n import { useState } from 'react'\n \n-import { validateAddress, type Address } from '@/features/checkout/validate'\n+import { normalizePostcode, validateAddress, type Address } from '@/features/checkout/validate'\n \n const EMPTY: Address = { name: '', street: '', postcode: '', city: '' }\n \n@@ -17,7 +17,7 @@\n             <input\n                 name=\"postcode\"\n                 value={address.postcode}\n-                onChange={(event) => setAddress({ ...address, postcode: event.target.value })}\n+                onChange={(event) => setAddress({ ...address, postcode: normalizePostcode(event.target.value) })}\n             />\n             {errors.map((error) => (\n                 <p key={error} className=\"error\">\n",
+            "excerpt": {
+                "start": 18,
+                "lines": [
+                    "                name=\"postcode\"",
+                    "                value={address.postcode}",
+                    "                onChange={(event) => setAddress({ ...address, postcode: event.target.value })}",
+                    "            />",
+                    "            {errors.map((error) => ("
+                ],
+                "from": 20,
+                "to": 20
+            },
+            "deleted": false
+        },
+        "901001": {
+            "fromCommit": "07bb6e31",
+            "toCommit": "e4a02c95",
+            "diff": "@@ -3,5 +3,6 @@\n const VAT = 0.21\n \n export function cartTotal(lines: CartLine[]) {\n-    return lines.reduce((sum, line) => sum + Math.round(line.price * line.quantity * (1 + VAT)), 0)\n+    const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0)\n+    return Math.round(subtotal * (1 + VAT))\n }\n",
+            "excerpt": {
+                "start": 4,
+                "lines": [
+                    "",
+                    "export function cartTotal(lines: CartLine[]) {",
+                    "    return lines.reduce((sum, line) => sum + Math.round(line.price * line.quantity * (1 + VAT)), 0)",
+                    "}"
+                ],
+                "from": 6,
+                "to": 6
+            },
+            "deleted": false
+        }
+    }
+}

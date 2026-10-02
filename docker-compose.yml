@@ -1,0 +1,21 @@
+services:
+    database:
+        image: postgres:17-alpine
+        container_name: open-prs-board-db
+        environment:
+            POSTGRES_USER: board
+            POSTGRES_PASSWORD: board
+            POSTGRES_DB: board
+        ports:
+            - '5435:5432'
+        volumes:
+            - database:/var/lib/postgresql/data
+            - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U board -d board']
+            interval: 2s
+            timeout: 3s
+            retries: 15
+
+volumes:
+    database:

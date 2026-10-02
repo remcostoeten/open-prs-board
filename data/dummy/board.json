@@ -1,0 +1,246 @@
+{
+    "repository": "webshop",
+    "author": "Sanne de Vries",
+    "fetchedAt": "2026-09-30T09:15+02:00",
+    "stack": {
+        "branch": "feature/checkout",
+        "envUrl": "https://checkout.webshop.example"
+    },
+    "groups": [
+        {
+            "id": "stack",
+            "title": "Checkout-stack",
+            "description": "Drie PR's die op elkaar gebaseerd zijn. Review ze in deze volgorde: een fix in stap 1 wordt daarna naar stap 2 en 3 gerebased.",
+            "prs": [101, 102, 103]
+        },
+        {
+            "id": "other",
+            "title": "Overige pull requests",
+            "description": null,
+            "prs": [112, 110, 109, 108]
+        },
+        {
+            "id": "drafts",
+            "title": "Drafts",
+            "description": "2 PR's, nog niet klaar voor review.",
+            "prs": [117, 116]
+        }
+    ],
+    "prs": [
+        {
+            "number": 101,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/101",
+            "step": 1,
+            "ticket": {
+                "key": "SHOP-41",
+                "old": null
+            },
+            "title": "Add the checkout route and cart summary",
+            "base": "feature/checkout",
+            "add": 37,
+            "rem": 0,
+            "files": 3,
+            "env": {
+                "kind": "shared"
+            },
+            "pipeline": "passed",
+            "draft": false,
+            "author": "Sanne",
+            "reviewer": "Mila",
+            "review": "approved",
+            "updatedAt": "2026-09-24T11:20+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 102,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/102",
+            "step": 2,
+            "ticket": {
+                "key": "SHOP-42",
+                "old": null
+            },
+            "title": "Validate the shipping address form",
+            "base": "SHOP-41-checkout-route",
+            "add": 62,
+            "rem": 0,
+            "files": 3,
+            "env": {
+                "kind": "shared"
+            },
+            "pipeline": "passed",
+            "draft": false,
+            "author": "Sanne",
+            "reviewer": "Mila",
+            "review": "changes_requested",
+            "updatedAt": "2026-09-29T16:05+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 103,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/103",
+            "step": 3,
+            "ticket": {
+                "key": "SHOP-43",
+                "old": null
+            },
+            "title": "Add the payment step with iDEAL",
+            "base": "SHOP-42-address-form",
+            "add": 29,
+            "rem": 0,
+            "files": 2,
+            "env": {
+                "kind": "shared"
+            },
+            "pipeline": "passed",
+            "draft": false,
+            "author": "Sanne",
+            "reviewer": "Mila",
+            "review": "pending",
+            "updatedAt": "2026-09-29T16:40+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 112,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/112",
+            "step": null,
+            "ticket": null,
+            "title": "Cache the product list query",
+            "base": null,
+            "add": 8,
+            "rem": 1,
+            "files": 1,
+            "env": {
+                "kind": "branch",
+                "url": "https://cache-product-list.webshop.example",
+                "host": "cache-product-list"
+            },
+            "pipeline": "passed",
+            "draft": false,
+            "author": "Daan",
+            "reviewer": null,
+            "review": "none",
+            "updatedAt": "2026-09-30T08:50+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 110,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/110",
+            "step": null,
+            "ticket": {
+                "key": "SHOP-57",
+                "old": null
+            },
+            "title": "Fix the price rounding in the cart total",
+            "base": null,
+            "add": 11,
+            "rem": 1,
+            "files": 2,
+            "env": {
+                "kind": "branch",
+                "url": "https://shop-57-rounding.webshop.example",
+                "host": "shop-57-rounding"
+            },
+            "pipeline": "failed",
+            "draft": false,
+            "author": "Sanne",
+            "reviewer": "Jesse",
+            "review": "changes_requested",
+            "updatedAt": "2026-09-28T14:12+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 109,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/109",
+            "step": null,
+            "ticket": null,
+            "title": "Add a pre-commit hook for the formatter",
+            "base": null,
+            "add": 5,
+            "rem": 1,
+            "files": 2,
+            "env": {
+                "kind": "branch",
+                "url": "https://pre-commit-format.webshop.example",
+                "host": "pre-commit-format"
+            },
+            "pipeline": "passed",
+            "draft": false,
+            "author": "Sanne",
+            "reviewer": "Jesse",
+            "review": "changes_requested",
+            "updatedAt": "2026-09-18T09:30+02:00",
+            "linkedTo": 116
+        },
+        {
+            "number": 108,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/108",
+            "step": null,
+            "ticket": {
+                "key": "SHOP-50",
+                "old": null
+            },
+            "title": "Replace moment with Intl.DateTimeFormat",
+            "base": null,
+            "add": 2,
+            "rem": 3,
+            "files": 2,
+            "env": {
+                "kind": "branch",
+                "url": "https://shop-50-intl-dates.webshop.example",
+                "host": "shop-50-intl-dates"
+            },
+            "pipeline": "passed",
+            "draft": false,
+            "author": "Sanne",
+            "reviewer": "Jesse",
+            "review": "approved",
+            "updatedAt": "2026-09-22T13:45+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 117,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/117",
+            "step": null,
+            "ticket": {
+                "key": "SHOP-60",
+                "old": null
+            },
+            "title": "Sketch the order history page",
+            "base": null,
+            "add": 19,
+            "rem": 0,
+            "files": 1,
+            "env": {
+                "kind": "none"
+            },
+            "pipeline": "missing",
+            "draft": true,
+            "author": "Sanne",
+            "reviewer": null,
+            "review": "none",
+            "updatedAt": "2026-09-29T17:55+02:00",
+            "linkedTo": null
+        },
+        {
+            "number": 116,
+            "url": "https://bitbucket.org/example-team/webshop/pull-requests/116",
+            "step": null,
+            "ticket": null,
+            "title": "Move linting to Oxlint and oxfmt",
+            "base": null,
+            "add": 13,
+            "rem": 11,
+            "files": 3,
+            "env": {
+                "kind": "none"
+            },
+            "pipeline": "missing",
+            "draft": true,
+            "author": "Sanne",
+            "reviewer": null,
+            "review": "none",
+            "updatedAt": "2026-09-26T10:02+02:00",
+            "linkedTo": null
+        }
+    ]
+}

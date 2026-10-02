@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "plugins": ["unicorn", "oxc", "import", "promise"],
+    "plugins": ["unicorn", "oxc", "import", "promise", "react", "typescript"],
     "jsPlugins": [
         { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" },
         { "name": "skriuw", "specifier": "./tools/oxlint/skriuw/index.ts" }
@@ -22,5 +22,12 @@
         "anti-slop/no-reflect-get": "error",
         "skriuw/no-silent-catch": "error"
     },
-    "ignorePatterns": ["diffs/**", "**/node_modules/**", "tools/oxlint/anti-slop/**"]
+    "ignorePatterns": [
+        "diffs/**",
+        "**/node_modules/**",
+        "tools/oxlint/anti-slop/**",
+        ".next/**",
+        "drizzle/meta/**",
+        "next-env.d.ts"
+    ]
 }
