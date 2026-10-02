@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { ErrorNotice } from '@/features/errors/error-notice'
 import { cancelInvitationAction, inviteAction } from '@/features/workspace/actions'
@@ -49,6 +49,8 @@ export function InvitePanel({ baseUrl, pending }: Props) {
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState<PublicError | null>(null)
     const [created, setCreated] = useState<string | null>(null)
+    const [animate, setAnimate] = useState(false)
+    const pointerSubmit = useRef(false)
 
     return (
         <div className="invite-panel">
@@ -59,13 +61,19 @@ export function InvitePanel({ baseUrl, pending }: Props) {
             </p>
             <form
                 className="inline-form"
+                onKeyDownCapture={() => {
+                    pointerSubmit.current = false
+                }}
                 onSubmit={async (event) => {
                     event.preventDefault()
+                    const shouldAnimate = pointerSubmit.current
+                    pointerSubmit.current = false
                     setBusy(true)
                     setError(null)
                     const result = await inviteAction(email, role)
                     setBusy(false)
                     if (result.ok) {
+                        setAnimate(shouldAnimate)
                         setCreated(`${baseUrl}/invite/${result.value.id}`)
                         setEmail('')
                     } else setError(result.error)
@@ -83,13 +91,20 @@ export function InvitePanel({ baseUrl, pending }: Props) {
                     <option value="member">Member</option>
                     <option value="admin">Admin</option>
                 </select>
-                <button type="submit" className="primary" disabled={busy}>
+                <button
+                    type="submit"
+                    className="primary"
+                    disabled={busy}
+                    onClick={(event) => {
+                        pointerSubmit.current = event.detail > 0
+                    }}
+                >
                     Link maken
                 </button>
             </form>
             {error && <ErrorNotice error={error} compact />}
             {created && (
-                <div className="notice ok">
+                <div className="notice ok invitation-success" data-motion={animate} role="status">
                     <p>Uitnodiging gemaakt. Stuur deze link naar je collega:</p>
                     <CopyLink url={created} />
                 </div>

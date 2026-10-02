@@ -1814,6 +1814,87 @@ textarea {
     display: grid;
     gap: 8px;
 }
+
+.bell:not([open]) .bell-panel {
+    opacity: 0;
+    transform: scale(0.97);
+    pointer-events: none;
+}
+.bell-panel {
+    transform-origin: top right;
+}
+.bell[data-motion='true']::details-content {
+    transition: content-visibility 125ms allow-discrete;
+}
+.bell[data-motion='true'] .bell-panel {
+    transition:
+        opacity 125ms var(--ease-out),
+        transform 125ms var(--ease-out);
+}
+.bell[data-motion='true'][open] .bell-panel {
+    transition-duration: 150ms;
+}
+@starting-style {
+    .bell[data-motion='true'][open] .bell-panel {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+}
+
+.webhook-row {
+    display: none;
+}
+.webhook-row[data-open='true'] {
+    display: table-row;
+}
+.webhook-row[data-motion='true'] {
+    transition: display 100ms allow-discrete;
+}
+.webhook-row[data-motion='true'] .webhook-notice {
+    opacity: 0;
+    transition: opacity 100ms var(--ease-out);
+}
+.webhook-row[data-motion='true'][data-open='true'] .webhook-notice {
+    opacity: 1;
+    transition-duration: 150ms;
+}
+.invitation-success[data-motion='true'] {
+    transition: opacity 160ms var(--ease-out);
+}
+.bell[data-motion='false']::details-content,
+.bell[data-motion='false'] .bell-panel,
+.webhook-row[data-motion='false'],
+.webhook-row[data-motion='false'] .webhook-notice,
+.invitation-success[data-motion='false'] {
+    transition-property: none;
+}
+@starting-style {
+    .webhook-row[data-motion='true'][data-open='true'] .webhook-notice,
+    .invitation-success[data-motion='true'] {
+        opacity: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .bell .bell-panel,
+    .bell:not([open]) .bell-panel {
+        transform: none;
+    }
+    .bell[data-motion='true']::details-content,
+    .bell[data-motion='true'] .bell-panel,
+    .webhook-row[data-motion='true'],
+    .webhook-row[data-motion='true'] .webhook-notice,
+    .invitation-success[data-motion='true'] {
+        transition-duration: 100ms !important;
+    }
+    .bell[data-motion='true'] .bell-panel {
+        transition-property: opacity;
+    }
+    @starting-style {
+        .bell[data-motion='true'][open] .bell-panel {
+            transform: none;
+        }
+    }
+}
 .bell-panel li {
     display: grid;
     gap: 2px;

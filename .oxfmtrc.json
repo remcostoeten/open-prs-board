@@ -8,6 +8,7 @@
         "diffs/**",
         "**/node_modules/**",
         "tools/oxlint/anti-slop/**",
+        ".claude/skills/**",
         ".next/**",
         "drizzle/meta/**",
         "next-env.d.ts"

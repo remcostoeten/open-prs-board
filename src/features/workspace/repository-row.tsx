@@ -24,6 +24,7 @@ const STATUS: Record<RepositorySummary['status'], string> = {
 export function RepositoryRow({ repo, manager, webhook }: Props) {
     const [busy, setBusy] = useState(false)
     const [showHook, setShowHook] = useState(false)
+    const [animate, setAnimate] = useState(false)
     return (
         <>
             <tr>
@@ -49,16 +50,23 @@ export function RepositoryRow({ repo, manager, webhook }: Props) {
                         </button>
                     )}
                     {manager && webhook && (
-                        <button type="button" onClick={() => setShowHook((value) => !value)}>
+                        <button
+                            type="button"
+                            aria-expanded={showHook}
+                            onClick={(event) => {
+                                setAnimate(event.detail > 0)
+                                setShowHook((value) => !value)
+                            }}
+                        >
                             Webhook
                         </button>
                     )}
                 </td>
             </tr>
-            {showHook && webhook && (
-                <tr>
+            {manager && webhook && (
+                <tr className="webhook-row" data-open={showHook} data-motion={animate} inert={!showHook}>
                     <td colSpan={4}>
-                        <div className="notice">
+                        <div className="notice webhook-notice">
                             <p>
                                 Voeg in {PROVIDER_LABEL[repo.provider]} een webhook toe voor pull request-events met
                                 deze URL en dit geheim. Zonder webhook synchroniseert het bord elke 10 minuten.

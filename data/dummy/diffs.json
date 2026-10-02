@@ -1,0 +1,210 @@
+{
+    "101": [
+        {
+            "path": "src/features/cart/cart-summary.tsx",
+            "old": null,
+            "status": "added",
+            "add": 22,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,22 @@\n+import type { CartLine } from '@/features/cart/types'\n+import { formatPrice } from '@/shared/format-price'\n+\n+type Props = {\n+    lines: CartLine[]\n+}\n+\n+export function CartSummary({ lines }: Props) {\n+    const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0)\n+    return (\n+        <section className=\"cart-summary\">\n+            <ul>\n+                {lines.map((line) => (\n+                    <li key={line.id}>\n+                        {line.quantity} x {line.title} <span>{formatPrice(line.price)}</span>\n+                    </li>\n+                ))}\n+            </ul>\n+            <p className=\"total\">{formatPrice(total)}</p>\n+        </section>\n+    )\n+}\n"
+        },
+        {
+            "path": "src/routes/checkout.tsx",
+            "old": null,
+            "status": "added",
+            "add": 13,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,13 @@\n+import { CartSummary } from '@/features/cart/cart-summary'\n+import { useCart } from '@/features/cart/use-cart'\n+\n+export function CheckoutRoute() {\n+    const cart = useCart()\n+    if (cart.lines.length === 0) return <p>Je winkelwagen is leeg.</p>\n+    return (\n+        <main className=\"checkout\">\n+            <h1>Afrekenen</h1>\n+            <CartSummary lines={cart.lines} />\n+        </main>\n+    )\n+}\n"
+        },
+        {
+            "path": "src/routes/index.ts",
+            "old": null,
+            "status": "modified",
+            "add": 2,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -1,4 +1,5 @@\n import { CartRoute } from '@/routes/cart'\n+import { CheckoutRoute } from '@/routes/checkout'\n import { HomeRoute } from '@/routes/home'\n import { ProductRoute } from '@/routes/product'\n \n@@ -6,4 +7,5 @@\n     { path: '/', component: HomeRoute },\n     { path: '/product/:slug', component: ProductRoute },\n     { path: '/cart', component: CartRoute },\n+    { path: '/checkout', component: CheckoutRoute },\n ]\n"
+        }
+    ],
+    "102": [
+        {
+            "path": "src/features/checkout/address-form.tsx",
+            "old": null,
+            "status": "added",
+            "add": 30,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,30 @@\n+import { useState } from 'react'\n+\n+import { normalizePostcode, validateAddress, type Address } from '@/features/checkout/validate'\n+\n+const EMPTY: Address = { name: '', street: '', postcode: '', city: '' }\n+\n+export function AddressForm({ onSubmit }: { onSubmit: (address: Address) => void }) {\n+    const [address, setAddress] = useState(EMPTY)\n+    const errors = validateAddress(address)\n+    return (\n+        <form\n+            onSubmit={(event) => {\n+                event.preventDefault()\n+                if (errors.length === 0) onSubmit(address)\n+            }}\n+        >\n+            <input\n+                name=\"postcode\"\n+                value={address.postcode}\n+                onChange={(event) => setAddress({ ...address, postcode: normalizePostcode(event.target.value) })}\n+            />\n+            {errors.map((error) => (\n+                <p key={error} className=\"error\">\n+                    {error}\n+                </p>\n+            ))}\n+            <button type=\"submit\">Verder naar betalen</button>\n+        </form>\n+    )\n+}\n"
+        },
+        {
+            "path": "src/features/checkout/validate.test.ts",
+            "old": null,
+            "status": "added",
+            "add": 12,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,12 @@\n+import { expect, test } from 'bun:test'\n+\n+import { validateAddress } from '@/features/checkout/validate'\n+\n+test('an empty form reports the missing name', () => {\n+    expect(validateAddress({ name: '', street: '', postcode: '', city: '' })).toEqual(['Vul je naam in.'])\n+})\n+\n+test('a lowercase postcode is accepted', () => {\n+    const address = { name: 'Sanne', street: 'Dorpsstraat 1', postcode: '8911 ab', city: 'Leeuwarden' }\n+    expect(validateAddress(address)).toEqual([])\n+})\n"
+        },
+        {
+            "path": "src/features/checkout/validate.ts",
+            "old": null,
+            "status": "added",
+            "add": 20,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,20 @@\n+export type Address = {\n+    name: string\n+    street: string\n+    postcode: string\n+    city: string\n+}\n+\n+const POSTCODE = /^[1-9][0-9]{3} ?[A-Z]{2}$/\n+\n+export function normalizePostcode(value: string) {\n+    return value.trim().toUpperCase()\n+}\n+\n+export function validateAddress(address: Address) {\n+    if (address.name.trim() === '') return ['Vul je naam in.']\n+    if (address.street.trim() === '') return ['Vul je straat en huisnummer in.']\n+    if (!POSTCODE.test(normalizePostcode(address.postcode))) return ['Deze postcode klopt niet.']\n+    if (address.city.trim() === '') return ['Vul je woonplaats in.']\n+    return []\n+}\n"
+        }
+    ],
+    "103": [
+        {
+            "path": "src/features/checkout/banks.ts",
+            "old": null,
+            "status": "added",
+            "add": 7,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,7 @@\n+export const BANKS = [\n+    { id: 'abn', name: 'ABN AMRO' },\n+    { id: 'asn', name: 'ASN Bank' },\n+    { id: 'ing', name: 'ING' },\n+    { id: 'rabo', name: 'Rabobank' },\n+    { id: 'sns', name: 'SNS' },\n+]\n"
+        },
+        {
+            "path": "src/features/checkout/payment-step.tsx",
+            "old": null,
+            "status": "added",
+            "add": 22,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,22 @@\n+import { useState } from 'react'\n+\n+import { BANKS } from '@/features/checkout/banks'\n+\n+export function PaymentStep({ onPay }: { onPay: (bank: string) => void }) {\n+    const [bank, setBank] = useState(BANKS[0].id)\n+    return (\n+        <fieldset className=\"payment-step\">\n+            <legend>Betaal met iDEAL</legend>\n+            <select value={bank} onChange={(event) => setBank(event.target.value)}>\n+                {BANKS.map((option) => (\n+                    <option key={option.id} value={option.id}>\n+                        {option.name}\n+                    </option>\n+                ))}\n+            </select>\n+            <button type=\"button\" onClick={() => onPay(bank)}>\n+                Betalen\n+            </button>\n+        </fieldset>\n+    )\n+}\n"
+        }
+    ],
+    "108": [
+        {
+            "path": "package.json",
+            "old": null,
+            "status": "modified",
+            "add": 0,
+            "rem": 1,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -8,7 +8,6 @@\n         \"format\": \"prettier --write .\"\n     },\n     \"dependencies\": {\n-        \"moment\": \"^2.30.1\",\n         \"react\": \"^19.2.0\",\n         \"react-dom\": \"^19.2.0\"\n     },\n"
+        },
+        {
+            "path": "src/shared/format-date.ts",
+            "old": null,
+            "status": "modified",
+            "add": 2,
+            "rem": 2,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -1,5 +1,5 @@\n-import moment from 'moment'\n+const formatter = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })\n \n export function formatDate(value: string) {\n-    return moment(value).locale('nl').format('D MMMM YYYY')\n+    return formatter.format(new Date(value))\n }\n"
+        }
+    ],
+    "109": [
+        {
+            "path": ".husky/pre-commit",
+            "old": null,
+            "status": "added",
+            "add": 2,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,2 @@\n+bun run fmt\n+git add -u\n"
+        },
+        {
+            "path": "package.json",
+            "old": null,
+            "status": "modified",
+            "add": 3,
+            "rem": 1,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -5,7 +5,8 @@\n         \"dev\": \"vite\",\n         \"build\": \"vite build\",\n         \"lint\": \"eslint .\",\n-        \"format\": \"prettier --write .\"\n+        \"fmt\": \"prettier --write .\",\n+        \"prepare\": \"husky\"\n     },\n     \"dependencies\": {\n         \"moment\": \"^2.30.1\",\n@@ -14,6 +15,7 @@\n     },\n     \"devDependencies\": {\n         \"eslint\": \"^9.30.0\",\n+        \"husky\": \"^9.1.7\",\n         \"prettier\": \"^3.6.0\",\n         \"vite\": \"^7.1.0\"\n     }\n"
+        }
+    ],
+    "110": [
+        {
+            "path": "src/features/cart/total.test.ts",
+            "old": null,
+            "status": "modified",
+            "add": 9,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -5,3 +5,12 @@\n test('adds VAT to the lines', () => {\n     expect(cartTotal([{ id: 'a', title: 'Mok', price: 1000, quantity: 1 }])).toBe(1210)\n })\n+\n+test('rounds once, on the whole cart', () => {\n+    const lines = [\n+        { id: 'a', title: 'Sticker', price: 33, quantity: 1 },\n+        { id: 'b', title: 'Sticker', price: 33, quantity: 1 },\n+        { id: 'c', title: 'Sticker', price: 33, quantity: 1 },\n+    ]\n+    expect(cartTotal(lines)).toBe(120)\n+})\n"
+        },
+        {
+            "path": "src/features/cart/total.ts",
+            "old": null,
+            "status": "modified",
+            "add": 2,
+            "rem": 1,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -3,5 +3,6 @@\n const VAT = 0.21\n \n export function cartTotal(lines: CartLine[]) {\n-    return lines.reduce((sum, line) => sum + line.price * line.quantity * (1 + VAT), 0)\n+    const subtotal = lines.reduce((sum, line) => sum + line.price * line.quantity, 0)\n+    return Math.round(subtotal * (1 + VAT))\n }\n"
+        }
+    ],
+    "112": [
+        {
+            "path": "src/features/products/queries.ts",
+            "old": null,
+            "status": "modified",
+            "add": 8,
+            "rem": 1,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -1,5 +1,12 @@\n import { api } from '@/shared/api'\n \n+const TTL_MS = 60_000\n+const cache = new Map<string, { at: number; products: Promise<unknown> }>()\n+\n export async function listProducts(category: string) {\n-    return api.get(`/products?category=${category}`)\n+    const hit = cache.get(category)\n+    if (hit && Date.now() - hit.at < TTL_MS) return hit.products\n+    const products = api.get(`/products?category=${category}`)\n+    cache.set(category, { at: Date.now(), products })\n+    return products\n }\n"
+        }
+    ],
+    "116": [
+        {
+            "path": ".eslintrc.json",
+            "old": null,
+            "status": "removed",
+            "add": 0,
+            "rem": 7,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -1,7 +0,0 @@\n-{\n-    \"root\": true,\n-    \"extends\": [\"eslint:recommended\", \"plugin:react/recommended\", \"prettier\"],\n-    \"rules\": {\n-        \"no-console\": \"warn\"\n-    }\n-}\n"
+        },
+        {
+            "path": ".oxlintrc.json",
+            "old": null,
+            "status": "added",
+            "add": 9,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,9 @@\n+{\n+    \"$schema\": \"./node_modules/oxlint/configuration_schema.json\",\n+    \"plugins\": [\"typescript\", \"react\", \"import\"],\n+    \"rules\": {\n+        \"func-style\": [\"error\", \"declaration\"],\n+        \"prefer-arrow-callback\": \"error\",\n+        \"no-console\": \"warn\"\n+    }\n+}\n"
+        },
+        {
+            "path": "package.json",
+            "old": null,
+            "status": "modified",
+            "add": 4,
+            "rem": 4,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -4,8 +4,8 @@\n     \"scripts\": {\n         \"dev\": \"vite\",\n         \"build\": \"vite build\",\n-        \"lint\": \"eslint .\",\n-        \"format\": \"prettier --write .\"\n+        \"lint\": \"oxlint\",\n+        \"format\": \"oxfmt\"\n     },\n     \"dependencies\": {\n         \"moment\": \"^2.30.1\",\n@@ -13,8 +13,8 @@\n         \"react-dom\": \"^19.2.0\"\n     },\n     \"devDependencies\": {\n-        \"eslint\": \"^9.30.0\",\n-        \"prettier\": \"^3.6.0\",\n+        \"oxfmt\": \"^0.71.0\",\n+        \"oxlint\": \"^1.86.0\",\n         \"vite\": \"^7.1.0\"\n     }\n }\n"
+        }
+    ],
+    "117": [
+        {
+            "path": "src/routes/orders.tsx",
+            "old": null,
+            "status": "added",
+            "add": 19,
+            "rem": 0,
+            "binary": false,
+            "truncated": false,
+            "diff": "@@ -0,0 +1,19 @@\n+import { formatDate } from '@/shared/format-date'\n+\n+// TODO: replace with the orders endpoint once SHOP-61 lands\n+const ORDERS = [{ id: '1001', placedAt: '2026-09-12', total: 4598 }]\n+\n+export function OrdersRoute() {\n+    return (\n+        <main className=\"orders\">\n+            <h1>Je bestellingen</h1>\n+            <ul>\n+                {ORDERS.map((order) => (\n+                    <li key={order.id}>\n+                        Bestelling {order.id}, {formatDate(order.placedAt)}\n+                    </li>\n+                ))}\n+            </ul>\n+        </main>\n+    )\n+}\n"
+        }
+    ]
+}
