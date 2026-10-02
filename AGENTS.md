@@ -49,7 +49,7 @@ Before reporting a change as done, run `typecheck`, `lint`, `format:check` and `
 | `src/shared`             | Error codes, the `Result` types and small helpers. There is no `lib` folder.         |
 | `src/store/semantic.ts`  | The semantic type aliases. Import from here, never redeclare them.                   |
 | `data/dummy`             | The fictional `webshop` dataset behind `db:demo`.                                    |
-| `data/snapshot`          | An exported snapshot of a real repository. Do not copy its contents elsewhere.       |
+| `data/snapshot`          | Git-ignored. An optional exported snapshot of a real repository. Never commit it.    |
 | `drizzle`                | Generated migrations. Never edit them by hand.                                       |
 | `tools/oxlint`           | The local Oxlint plugins. `anti-slop` is vendored, leave it as it is.                |
 | `.claude/skills`         | Vendored skills: `generic-program-rules` and `emil-design-eng`. Leave them as-is.    |
@@ -108,7 +108,7 @@ A provider is an object that satisfies `ProviderAdapter` in `src/features/provid
 
 ## Do not
 
-- Commit `.env.local`, anything from `diffs/`, or real repository data. `diffs/` contains source code from a private repository.
+- Commit `.env.local`, anything from `diffs/` or `data/snapshot/`, or real repository data. `diffs/` contains source code from a private repository.
 - Add ESLint, Prettier or another formatter.
 - Mention Claude or any AI tool in commit messages or pull request descriptions.
 - Remove the Next.js block at the top of this file. `next dev` writes it back.

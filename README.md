@@ -59,16 +59,23 @@ Sign in with `demo@example.com` and `demo-password`. The data lives in `data/dum
 
 1. Open http://localhost:3000 and create an account with an email address and a password of at least 10 characters.
 2. Give your workspace a name.
-3. Pick repositories. Without OAuth credentials the choices are the two file datasets under Demo-snapshot: the fictional `webshop` and the exported `client-site` snapshot. Neither needs a provider account.
+3. Pick repositories. Without a provider connection the only choice is `webshop` under Demo-snapshot, the fictional dataset in `data/dummy`.
 
 That gives you a working board. To also load the groups, links and notes that belong to a dataset, seed it into your workspace:
 
 ```sh
 docker exec open-prs-board-db psql -U board -d board -c 'select name, slug from organization'
-bun run db:seed <workspace-slug> dummy      # or snapshot, the default
+bun run db:seed <workspace-slug>            # dummy, the default
 ```
 
-The first command prints the slug, which is the workspace name plus a random suffix. The file diffs of the `client-site` snapshot are in the git-ignored `diffs/` folder because they contain repository source, so a fresh clone shows those PRs and threads without diffs. Ask a colleague for the folder if you need them. The dummy data has its diffs in the repo.
+The first command prints the slug, which is the workspace name plus a random suffix.
+
+### Real data
+
+The repository only ships the fictional `webshop` dataset. Data from a real repository never goes into git. There are two ways to get it:
+
+- **Sync it from the provider.** Connect Bitbucket or GitHub as described in [Connecting Bitbucket and GitHub](#connecting-bitbucket-and-github) and pick the repository. Pull requests, threads and diffs land in Postgres and stay there.
+- **Use an exported snapshot.** A snapshot is a set of files in the same shape as `data/dummy`, taken from a private repository and passed around by hand. Put `board.json`, `review.json` and `notes.json` in `data/snapshot/` and the per-PR diffs in `diffs/<pr>.json`. Both folders are git-ignored. The snapshot then shows up as a second repository under Demo-snapshot, and `bun run db:seed <workspace-slug> snapshot` loads its groups, links and notes. Ask a colleague who has one. Without `diffs/` the PRs and threads load without diffs.
 
 `bun run db:down` stops the container and keeps the data. `docker compose down -v` also deletes it.
 

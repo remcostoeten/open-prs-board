@@ -128,8 +128,8 @@ async function listRepositories() {
     const repositories: SyncedRepository[] = []
     for (const externalId of [DUMMY_EXTERNAL_ID, SNAPSHOT_EXTERNAL_ID]) {
         const data = await load(externalId)
-        if (!data.ok) return data
-        repositories.push(toRepository(externalId, data.value.board))
+        if (data.ok) repositories.push(toRepository(externalId, data.value.board))
+        else if (externalId === DUMMY_EXTERNAL_ID) return data
     }
     return ok(repositories)
 }

@@ -6,9 +6,9 @@ import { organization } from '@/server/db/auth-schema'
 import { closeDatabase, db } from '@/server/db/client'
 
 const slug = process.argv[2]
-const dataset = process.argv[3] ?? SNAPSHOT_EXTERNAL_ID
+const dataset = process.argv[3] ?? DUMMY_EXTERNAL_ID
 if (!slug || (dataset !== SNAPSHOT_EXTERNAL_ID && dataset !== DUMMY_EXTERNAL_ID)) {
-    console.error('Usage: bun run db:seed <workspace-slug> [snapshot|dummy]')
+    console.error('Usage: bun run db:seed <workspace-slug> [dummy|snapshot]')
     process.exit(1)
 }
 
